@@ -41,6 +41,14 @@ def parse_amount(v):
     return num * _SUFFIX[suf.upper() if suf and suf.isascii() else suf] if suf else num
 
 
+_TOTAL = re.compile(r"(합계|총계|전사|^\s*total\b|consolidated)", re.I)
+
+
+def is_total_row(name) -> bool:
+    """세그먼트 목록에 섞인 전사 합계 행인지."""
+    return bool(name) and bool(_TOTAL.search(str(name)))
+
+
 def _company_dir(ticker: str, base: Path | None = None) -> Path:
     return (base or config.MY_INPUTS) / "companies" / safe_filename(ticker)
 

@@ -162,3 +162,9 @@ def test_components_avoid_svg_which_streamlit_sanitizer_strips():
     v = metrics.verdict(105, 100)
     html = components.consensus_strip(105, 100, 95, 110, v, str) + components.orb(0.5)
     assert "<svg" not in html and 'class="dot"' in html and 'class="band"' in html
+
+
+def test_segment_total_row_detected():
+    from earnings_lens.manual import is_total_row
+    assert is_total_row("전사 합계(GAAP)") and is_total_row("Total") and is_total_row("총계")
+    assert not is_total_row("Data Center") and not is_total_row("메모리") and not is_total_row(None)

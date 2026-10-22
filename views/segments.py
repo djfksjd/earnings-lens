@@ -16,7 +16,8 @@ def render() -> None:
     if r is None:
         return
     c.page_title("사업부문", f"{r.profile.name} · {k.plabel(r)} 세그먼트별 QoQ / YoY")
-    segs = r.inputs.get("segments") or []
+    # AI가 가끔 '전사 합계' 행을 부문처럼 넣는다. 합계가 섞이면 비중이 틀어지므로 뺀다.
+    segs = [s for s in (r.inputs.get("segments") or []) if not manual.is_total_row(s.get("name"))]
     if not segs:
         c.show(c.card("세그먼트 데이터가 없어요", c.empty(
             "무료 API는 사업부문 수치를 주지 않아요. 두 가지 방법 중 하나를 쓰세요.<br>"
