@@ -1,0 +1,9 @@
+# 버전을 고정해 같은 환경을 재현한다 (Python 3.11 이상)
+streamlit==1.66.1
+yfinance==1.7.0
+pandas==3.0.6
+plotly==7.1.0
+requests==2.34.2
+python-dotenv==1.2.4
+PyYAML==6.0.3
+pytest==9.1.1

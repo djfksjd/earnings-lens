@@ -1,0 +1,6 @@
+# 처음 실행할 때 쓰는 기본 관심 종목. 내 목록은 my_inputs/watchlist.yaml 에 저장됩니다.
+tickers:
+  - NVDA
+  - AAPL
+  - 005930.KS
+  - 000660.KS

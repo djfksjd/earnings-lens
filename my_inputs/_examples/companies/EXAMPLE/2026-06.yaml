@@ -1,0 +1,79 @@
+# ── 작성 예시 (가상의 회사, 가상의 숫자) ──────────────────────────────
+# 실제 파일 위치: my_inputs/companies/<티커>/<분기말 연-월>.yaml
+#   예) 삼성전자 2분기 → my_inputs/companies/005930_KS/2026-06.yaml
+#   예) 엔비디아 FY27 2Q(7월 말) → my_inputs/companies/NVDA/2026-07.yaml
+# 앱의 [입력 관리] 화면에서 바로 편집·저장할 수도 있습니다.
+# 금액: 숫자 또는 41.1B / 1.2조 / 3,500억 표기 가능
+
+consensus:
+  revenue: 12.5조
+  operating_income: 1.8조
+  eps: 2100
+  source: "증권사 컨센서스 2026-07-20"
+
+segments:
+  - name: A 부문
+    revenue: 7.2조
+    revenue_prev_q: 6.8조
+    revenue_prev_y: 5.9조
+    operating_income: 1.3조
+    operating_income_prev_q: 1.1조
+    operating_income_prev_y: 0.8조
+    note: 고부가 제품 비중 확대
+  - name: B 부문
+    revenue: 5.6조
+    revenue_prev_q: 5.9조
+    revenue_prev_y: 6.1조
+    operating_income: 0.6조
+    operating_income_prev_q: 0.7조
+    operating_income_prev_y: 0.9조
+
+kpis:
+  - name: 가동률
+    value: 87
+    prev_q: 82
+    prev_y: 74
+    unit: "%"
+  - name: 수주잔고
+    value: 41조
+    prev_q: 38조
+    prev_y: 30조
+    unit: 원
+
+guidance:
+  - metric: 3분기 매출
+    period: 3Q26
+    low: 13조
+    high: 13.6조
+    unit: 원
+    direction: 상향
+    note: 신규 라인 가동 반영
+
+tone:
+  score: 0.5
+  label: 긍정
+  vs_last: 개선
+  summary: 수요 가시성에 대한 언급이 전분기보다 구체적이었다.
+  changes:
+    - 하반기 공급 부족을 처음으로 명시
+    - 가격 인상 가능성 언급
+
+quotes:
+  - speaker: CEO
+    role: 대표이사
+    text: "하반기 수요는 공급 능력을 넘어설 것으로 봅니다."
+    why: 증설 투자 정당화
+
+qa:
+  - analyst: ○○증권
+    question: 가격 인상 폭은?
+    answer: 고객별로 협의 중이며 한 자릿수 후반을 기대한다.
+    signal: 마진 개선 여지
+
+catalysts:
+  - date: 2026-09-15
+    event: 신제품 출시 행사
+    why: 하반기 매출 기여 확인
+
+notes: |
+  자유 메모 공간

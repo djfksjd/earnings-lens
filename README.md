@@ -1,0 +1,505 @@
+# Earnings Lens — 실적 시즌 리서치 데스크
+
+미국·한국 상장사의 **분기 실적을 한 화면에서 정리**하는 로컬 대시보드입니다.
+종목과 분기를 고르면 아래 9가지를 자동으로 모으고, 자동으로 못 채우는 값은 직접 넣거나 AI(Claude 구독 플랜)로 추출합니다.
+
+| # | 항목 | 어디서 오나 |
+|---|---|---|
+| 1 | 매출액·영업이익·EBITDA·EPS의 QoQ / YoY | 자동 (yfinance · DART · 네이버) |
+| 2 | 컨센서스 대비 서프라이즈 / 쇼크 | 자동 (yfinance · Alpha Vantage · 스냅샷) + 직접 입력 |
+| 3 | 사업부문별 매출·영업이익 (QoQ/YoY) | AI 추출 (SEC 보도자료 · IR 자료) + 직접 입력 |
+| 4 | 기업별 KPI 변화 | AI 추출 + 직접 입력 |
+| 5 | 전분기 대비 컨콜 톤 변화 | AI 분석 (+ Alpha Vantage 감성 점수) |
+| 6 | 가이던스 | AI 추출 + 직접 입력 |
+| 7 | Q&A · CEO 핵심 발언 | AI 분석 |
+| 8 | 앞으로의 카탈리스트(체크포인트) | 자동(다음 발표일·공시) + AI + 직접 입력 |
+| 9 | 주가 반응 (갭·D+1·D+5·D+20·시장 대비) | 자동 (yfinance) |
+
+<p align="center">
+  <img src="docs/images/overview-desktop.jpg" alt="Earnings Lens 개요 화면 (데스크톱)" width="78%">
+  <img src="docs/images/overview-mobile.jpg" alt="Earnings Lens 개요 화면 (모바일)" width="18%">
+</p>
+
+- **주소는 고정입니다: <http://127.0.0.1:8765>**
+- 유료 API는 하나도 쓰지 않습니다. 키가 하나도 없어도 1·2(EPS)·9번은 바로 동작합니다.
+- AI는 **Claude 구독 플랜**(Pro/Max)을 씁니다. API 키는 필요 없습니다.
+
+> ⚠️ 이 도구는 투자 자문이 아닙니다. 모든 숫자에는 출처 배지(자동 / 내 입력 / AI 추출)가 붙어 있으니, 공유하기 전에 원문으로 확인하세요.
+
+---
+
+## 목차
+
+1. [완전 초보자용 설치 가이드](#1-완전-초보자용-설치-가이드)
+   - 1-1. Antigravity 설치
+   - 1-2. 터미널 여는 법
+   - 1-3. 필수 CLI 설치 (Git · Python · Claude Code)
+   - 1-4. 이 저장소 내려받기
+   - 1-5. 실행하기
+   - 1-6. API 키 등록 (.env)
+2. [화면 사용법](#2-화면-사용법)
+3. [내가 직접 해야 하는 일 vs 자동으로 되는 일](#3-내가-직접-해야-하는-일-vs-자동으로-되는-일)
+4. [필요한 API와 등록 방법](#4-필요한-api와-등록-방법)
+5. [보안 기본 규칙](#5-보안-기본-규칙)
+6. [밖에서 접속하기: Tailscale 터널](#6-밖에서-접속하기-tailscale-터널)
+7. [폴더 구조](#7-폴더-구조)
+8. [문제 해결 (FAQ)](#8-문제-해결-faq)
+9. [개발자용 메모](#9-개발자용-메모)
+
+---
+
+## 1. 완전 초보자용 설치 가이드
+
+처음이라면 아래 순서대로만 따라오세요. 전체 15~25분 정도 걸립니다.
+명령어는 `코드 상자` 안의 내용을 **그대로 복사해서 붙여넣고 Enter**를 누르면 됩니다.
+
+### 1-1. Antigravity 설치 (코드 편집기)
+
+[Google Antigravity](https://antigravity.google)는 AI가 들어간 코드 편집기입니다(VS Code 기반). 이 프로젝트를 열고, 파일을 고치고, 터미널을 쓰는 데 사용합니다.
+
+1. 브라우저에서 **<https://antigravity.google/download>** 에 접속합니다.
+2. 내 컴퓨터에 맞는 설치 파일을 받습니다. 페이지가 자동으로 맞는 버전을 추천해 줍니다.
+   - **Mac**: Apple 칩(M1~M4)이면 *Apple Silicon*, 그 외는 *Intel*. 모르겠으면 화면 왼쪽 위 사과 메뉴 → *이 Mac에 관하여*에서 "칩"을 확인하세요.
+   - **Windows**: 대부분 *x64*를 고르면 됩니다.
+3. 설치합니다.
+   - **Mac**: 받은 `.dmg`를 열고 Antigravity 아이콘을 *Applications* 폴더로 끌어다 놓습니다.
+   - **Windows**: 받은 `.exe`를 실행하고 *다음*을 눌러 설치합니다.
+4. Antigravity를 실행하고 **Google 계정으로 로그인**합니다. 로그인해야 쓸 수 있습니다.
+5. 처음 설정 화면이 나오면 기본값 그대로 *Next*를 눌러도 됩니다.
+
+> 💡 Antigravity 대신 VS Code나 Cursor를 써도 아래 과정은 똑같습니다.
+
+### 1-2. 터미널 여는 법
+
+명령어를 입력하는 창을 **터미널**이라고 합니다.
+
+- **Antigravity 안에서**: 상단 메뉴 **Terminal → New Terminal** (단축키 Mac `` Ctrl+` `` / Windows `` Ctrl+` ``)
+- **Mac 단독**: `Cmd + Space` → "터미널" 입력 → Enter
+- **Windows 단독**: 시작 버튼 → "PowerShell" 입력 → *Windows PowerShell* 실행
+
+> Windows에서는 이 문서의 명령을 **PowerShell**에서 실행하세요(명령 프롬프트 CMD 아님).
+
+### 1-3. 필수 CLI 설치
+
+세 가지가 필요합니다: **Git**(코드 내려받기), **Python 3.11 이상**(앱 실행), **Claude Code CLI**(AI 기능).
+
+#### ① Git
+
+**Mac**
+
+```bash
+git --version
+```
+
+버전이 나오면 이미 설치된 것입니다. "command line developer tools" 설치 창이 뜨면 *설치*를 누르고 끝날 때까지 기다린 뒤 다시 실행하세요.
+
+**Windows** — <https://git-scm.com/download/win> 에서 받아 기본값으로 설치합니다. 설치 후 **PowerShell을 새로 열고** 확인합니다.
+
+```powershell
+git --version
+```
+
+#### ② Python 3.11 이상
+
+**Mac** — <https://www.python.org/downloads/> 에서 최신 macOS 설치 파일을 받아 설치합니다. 확인:
+
+```bash
+python3 --version
+```
+
+`Python 3.11` 이상이면 됩니다(3.12, 3.13, 3.14 모두 OK).
+
+**Windows** — <https://www.python.org/downloads/> 에서 받아 설치합니다.
+⚠️ 설치 첫 화면 아래쪽 **"Add python.exe to PATH"를 반드시 체크**하세요. 확인:
+
+```powershell
+py --version
+```
+
+#### ③ Claude Code CLI (AI 기능용, Claude 구독 플랜 필요)
+
+AI 분석(컨콜 톤, 핵심 발언, 세그먼트·가이던스 추출, Ask Lens)은 내 컴퓨터의 Claude Code CLI를 통해 **Claude 구독 플랜**(Pro 또는 Max)으로 동작합니다. AI를 안 쓸 거라면 건너뛰어도 앱은 동작합니다.
+
+**Mac / Linux**
+
+```bash
+curl -fsSL https://claude.ai/install.sh | bash
+```
+
+**Windows (PowerShell)**
+
+```powershell
+irm https://claude.ai/install.ps1 | iex
+```
+
+설치가 끝나면 **터미널을 닫았다가 새로 열고** 로그인합니다.
+
+```bash
+claude
+```
+
+처음 실행하면 브라우저가 열립니다. **Claude 구독 계정(claude.ai)으로 로그인**하세요. 로그인이 끝나면 터미널에서 `/exit`를 입력해 나옵니다. 설치 상태는 다음 명령으로 점검할 수 있습니다.
+
+```bash
+claude doctor
+```
+
+> ⚠️ 셸에 `ANTHROPIC_API_KEY` 환경변수가 설정돼 있으면 Claude Code가 플랜 대신 API 과금을 쓸 수 있습니다. 이 앱은 AI를 호출할 때 그 변수를 자동으로 지워서 **항상 플랜으로** 동작하게 합니다.
+
+### 1-4. 이 저장소 내려받기
+
+원하는 폴더(예: 문서 폴더)에서 실행합니다.
+
+```bash
+cd ~/Documents
+git clone https://github.com/djfksjd/earnings-lens.git
+cd earnings-lens
+```
+
+Windows PowerShell에서는 `cd ~/Documents` 대신 `cd $HOME\Documents`를 씁니다.
+
+그다음 Antigravity에서 **File → Open Folder** → 방금 받은 `earnings-lens` 폴더를 엽니다.
+
+### 1-5. 실행하기
+
+Antigravity의 터미널(1-2 참고)에서 실행합니다.
+
+**Mac / Linux**
+
+```bash
+./run.sh
+```
+
+**Windows (PowerShell)**
+
+```powershell
+.\run.bat
+```
+
+처음 실행하면 스크립트가 아래 일을 자동으로 합니다.
+
+1. `.venv` 가상환경을 만듭니다. 이 프로젝트 전용 파이썬 공간이라 컴퓨터의 다른 프로그램에 영향을 주지 않습니다.
+2. `requirements.txt`의 패키지를 설치합니다(1~3분).
+3. `.env.example`을 복사해 `.env`를 만듭니다. API 키를 넣는 파일입니다.
+4. 앱을 실행하고 브라우저에서 **<http://127.0.0.1:8765>** 를 엽니다.
+
+브라우저가 자동으로 안 열리면 주소창에 직접 `http://127.0.0.1:8765`를 입력하세요.
+**종료**는 터미널에서 `Ctrl + C`입니다. 다음부터는 `./run.sh`(Windows `.\run.bat`)만 실행하면 바로 뜹니다.
+
+<details>
+<summary>스크립트 없이 직접 실행하고 싶다면 (펼치기)</summary>
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+cp .env.example .env               # Windows: copy .env.example .env
+streamlit run app.py
+```
+
+</details>
+
+> 🔒 `Permission denied`가 나오면(Mac): `chmod +x run.sh` 후 다시 실행하세요.
+> 🔒 Windows에서 "스크립트 실행이 비활성화"되어 있다는 오류가 나오면 `.\run.bat` 대신 `cmd /c run.bat`을 실행하세요.
+
+### 1-6. API 키 등록 (.env)
+
+키가 하나도 없어도 앱은 동작합니다. 키를 넣을수록 채워지는 칸이 늘어납니다. 모두 **무료**입니다.
+
+1. Antigravity 왼쪽 파일 목록에서 **`.env`** 파일을 엽니다. 안 보이면 `.env.example`을 복사해 이름을 `.env`로 바꾸세요.
+2. 아래 [4장](#4-필요한-api와-등록-방법)을 보고 원하는 키를 받아 `=` 뒤에 붙여넣습니다.
+
+```dotenv
+SEC_USER_AGENT=Hong Gildong hong@example.com
+ALPHAVANTAGE_API_KEY=여기에_키
+DART_API_KEY=여기에_키
+```
+
+3. 저장한 뒤 앱을 **껐다가(Ctrl+C) 다시 실행**합니다.
+4. 앱 왼쪽 레일 맨 아래 **설정** 아이콘에서 각 키가 "등록됨"인지 확인합니다. 키 값 자체는 화면에 나오지 않습니다.
+
+> ❗ `.env`는 절대 다른 사람에게 보내거나 GitHub에 올리지 마세요. 이 저장소는 `.gitignore`로 `.env`를 자동으로 제외합니다.
+
+---
+
+## 2. 화면 사용법
+
+왼쪽 **아이콘 레일**에 마우스를 올리면 이름이 보입니다. 위쪽 **상단 바**에서 종목·분기를 고르면 모든 화면이 함께 바뀝니다.
+
+| 아이콘 | 화면 | 내용 |
+|---|---|---|
+| ▦ | **개요** | 헤드라인 판정(AI 오브 색 = 컨콜 톤), 4대 지표 카드, 주가 반응·톤·가이던스·체크포인트 |
+| 📈 | **실적** | 지표 비교표(당분기·전분기·전년동기·컨센서스·판정), 분기 추이, EPS 서프라이즈 이력 |
+| ◔ | **사업부문** | 세그먼트별 매출·영업이익 QoQ/YoY, 매출 구성 |
+| ⏱ | **KPI** | 회사 고유 지표 카드 |
+| 🎙 | **컨콜** | 톤 변화·핵심 발언·Q&A / 원문 가져오기·붙여넣기·AI 실행 |
+| ⚑ | **가이던스·카탈리스트** | 회사 가이던스, 다음 분기 시장 기대치, 체크포인트, 공시·뉴스 |
+| 🕯 | **주가 반응** | 발표 전후 가격(시장 대비), 과거 발표 반응 패턴 |
+| ✎ | **입력 관리** | 내가 넣는 값 편집(YAML), 관심 종목 |
+| ⚙ | **설정** | 데이터 소스·키 등록 상태, AI 연결 테스트 |
+
+- **종목 추가**: 상단 종목 상자에 티커를 입력하고 Enter. 미국 `NVDA`, 한국 `005930.KS`(코스피) / `035720.KQ`(코스닥). 6자리 숫자만 넣으면 코스피로 인식합니다.
+- **실시간 가격**: 상단 오른쪽 알약. 기본 30초마다 새로 고칩니다. 초록 점은 실시간, 노란 점은 지연 시세입니다.
+- **Ask Lens**: 오른쪽 아래 버튼. 지금 보고 있는 종목·분기 데이터만 근거로 답합니다(Claude 플랜).
+- **컨센서스 스트립**: 지표 카드 아래 막대에서 파란 띠는 추정 범위, 검은 눈금은 컨센서스, 점은 실제값(초록 상회 / 빨강 하회 / 노랑 부합)입니다.
+
+### 판정 기준
+
+| 컨센서스 대비 | 표시 |
+|---|---|
+| +10% 이상 | 어닝 서프라이즈 |
+| +2% 초과 | 상회 |
+| ±2% 이내 | 부합 |
+| −2% 미만 | 하회 |
+| −10% 이하 | 어닝 쇼크 |
+
+헤드라인 판정은 **영업이익 → EPS → 매출 → EBITDA** 순서로, 컨센서스가 있는 첫 지표를 씁니다. 기준값은 `earnings_lens/analysis/metrics.py`의 `INLINE`, `BIG`에서 바꿀 수 있습니다.
+
+### 추천 작업 흐름 (실적 발표 당일)
+
+1. 상단에서 종목을 고르고 **개요**에서 헤드라인과 4대 지표를 봅니다.
+2. **컨콜 → 원문 · AI 실행** 탭으로 갑니다.
+   - 미국: *Alpha Vantage에서 가져오기*로 컨콜 원문을 받고, *SEC 8-K 첨부*에서 보도자료를 고릅니다.
+   - 한국: 회사 IR 페이지의 컨콜 녹취·발표자료 텍스트를 붙여넣고 저장합니다.
+3. **컨콜 AI 분석 실행**과 **보도자료로 AI 추출**을 누릅니다(각 1~3분).
+4. 결과를 보고 **AI 결과를 내 입력으로 저장**을 누른 뒤, **입력 관리**에서 틀린 숫자를 고칩니다.
+5. 공유할 때는 각 화면을 캡처하세요. 출처 배지가 함께 찍힙니다.
+
+---
+
+## 3. 내가 직접 해야 하는 일 vs 자동으로 되는 일
+
+### ✅ 자동 (아무것도 안 해도 됨)
+
+- 분기 손익(매출·영업이익·EBITDA·EPS·순이익)과 QoQ/YoY 계산
+- EPS 컨센서스 대비 판정(미국·한국), 과거 EPS 서프라이즈 이력
+- 실시간/지연 주가, 발표일 전후 주가 반응·시장 대비 초과수익
+- 다음 분기 컨센서스(매출·EPS) **매일 스냅샷 저장** → 다음 실적 때 비교 기준으로 자동 사용
+- 다음 실적 발표 예정일, 최근 뉴스
+
+### 🔑 한 번만 하면 되는 일 (설정)
+
+| 할 일 | 효과 | 소요 |
+|---|---|---|
+| `.env`에 `SEC_USER_AGENT` 입력 | 미국 실적 보도자료(8-K) 자동 수집 → AI로 세그먼트·가이던스 추출 | 1분 |
+| Alpha Vantage 무료 키 | 미국 컨콜 원문 + **과거 분기 매출 컨센서스** | 2분 |
+| OpenDART 무료 키 | 한국 공식 분기 재무제표 + 공시 목록 | 5분 (이메일 인증) |
+| Claude Code 설치·로그인 | 모든 AI 기능 | 5분 |
+| (선택) Finnhub 무료 키 | 미국 실시간 시세 | 2분 |
+| (선택) 네이버 수집 켜기 | 한국 실시간 시세·분기 컨센서스(E)·목표주가 | 0분 (본인 판단, 4장 참고) |
+
+### ✍️ 직접 넣어야 하는 값 (`my_inputs/` 폴더, 또는 앱의 **입력 관리** 화면)
+
+| 값 | 왜 직접? | 어디서 구하나 |
+|---|---|---|
+| **한국 기업 영업이익 컨센서스** | 무료 API가 *지난 분기* 영업이익 컨센서스를 주지 않음 | FnGuide, 증권사 리포트, 네이버(옵트인 시 다음 분기는 자동 스냅샷) |
+| **한국 기업 컨콜 원문** | 무료 API 없음 | 회사 IR 페이지 녹취록·발표자료 |
+| **세그먼트·KPI 검토** | AI 추출값은 틀릴 수 있음 | 보도자료·IR 자료 원문 |
+| 가이던스·체크포인트 보완 | 정성적 판단 | 컨콜, 리포트 |
+
+파일 형식은 [`my_inputs/README.md`](my_inputs/README.md)와 예시 [`my_inputs/_examples/companies/EXAMPLE/2026-06.yaml`](my_inputs/_examples/companies/EXAMPLE/2026-06.yaml)을 보세요.
+**우선순위: 내 입력 > AI 추출 > 자동 수집.** 내가 넣은 값이 항상 이깁니다.
+
+---
+
+## 4. 필요한 API와 등록 방법
+
+모두 무료입니다. 유료 플랜은 쓰지 않습니다. 조사 근거와 대안 비교는 [`docs/API_GUIDE.md`](docs/API_GUIDE.md)에 있습니다.
+
+| 이름 | `.env` 항목 | 필요도 | 무료 한도 | 쓰는 곳 |
+|---|---|---|---|---|
+| yfinance | (키 없음) | 자동 | 비공식, 과호출 시 일시 차단 | 손익·EPS 추정/실적·발표일·가격·뉴스 |
+| SEC EDGAR | `SEC_USER_AGENT` | 미국 권장 | 초당 10회 | 8-K 실적 보도자료·CFO 코멘터리 원문 |
+| Alpha Vantage | `ALPHAVANTAGE_API_KEY` | 미국 권장 | **하루 25회** | 컨콜 트랜스크립트(발언별 감성), 과거 분기 매출·EPS 컨센서스 |
+| OpenDART | `DART_API_KEY` | 한국 권장 | 하루 약 2만 회 | 공식 분기 재무제표, 실적·IR 공시 |
+| Finnhub | `FINNHUB_API_KEY` | 선택 | 분당 60회 | 미국 실시간 시세 |
+| 네이버 증권 | `NAVER_SCRAPING_ENABLED` | 선택(옵트인) | — | 한국 실시간 시세, 분기 실적·컨센서스(E), 목표주가, 리포트 제목 |
+| Claude 플랜 | (키 없음, CLI 로그인) | AI 기능 | 플랜 사용량 | 톤·발언·Q&A·세그먼트·가이던스·KPI 추출, Ask Lens |
+
+### 등록 방법
+
+**SEC_USER_AGENT** — 키가 아닙니다. SEC 정책상 요청자 연락처를 밝혀야 해서 `이름 이메일` 형식으로 적습니다.
+
+```dotenv
+SEC_USER_AGENT=Hong Gildong hong@example.com
+```
+
+**Alpha Vantage**
+
+1. <https://www.alphavantage.co/support/#api-key> 접속
+2. 용도(Investor 등), 이메일 입력 → *GET FREE API KEY*
+3. 화면에 나온 키를 `ALPHAVANTAGE_API_KEY=`에 붙여넣기
+
+> 하루 25회 제한이 있어서 앱은 받은 트랜스크립트를 `data/cache/`에 **영구 저장**하고, 컨센서스는 하루 1회만 호출합니다.
+
+**OpenDART**
+
+1. <https://opendart.fss.or.kr> → 오른쪽 위 *인증키 신청/관리* → *인증키 신청*
+2. 회원가입(이메일 인증) 후 신청서 작성(사용 용도: 개인 학습·연구)
+3. *인증키 신청/관리 → 오픈API 이용현황*에서 40자리 키 복사 → `DART_API_KEY=`에 붙여넣기
+
+**Finnhub (선택)** — <https://finnhub.io/register> 가입 → 대시보드의 *API Key* 복사 → `FINNHUB_API_KEY=`
+
+**네이버 증권 수집 (선택, 옵트인)**
+
+네이버 증권은 키 없이 한국 종목의 실시간 시세와 *다음 분기 컨센서스(E)* 를 보여줍니다. 그런데 네이버의 `robots.txt`는 자동 수집을 막고 있고(`Disallow: /`), 이용약관도 무단 수집을 제한할 수 있습니다. 그래서 **기본값은 꺼짐**입니다. 개인 학습 목적에 한해 **본인 판단으로** 켤 수 있습니다.
+
+```dotenv
+NAVER_SCRAPING_ENABLED=true
+```
+
+켜더라도 종목당 몇 번만 호출하고 결과를 캐시합니다. 끄면 한국 시세는 yfinance(약 15~20분 지연)를 씁니다.
+
+### 왜 한국투자증권(KIS) API는 안 쓰나요?
+
+KIS Open API도 무료이고 실시간 시세를 주지만 **한국투자증권 계좌**가 필요하고 토큰 관리가 복잡합니다. 초보자용 구성에서는 빼고, 네이버 옵트인과 yfinance로 대신했습니다.
+
+### 컨콜 트랜스크립트를 무료로 받을 수 있나요?
+
+| 소스 | 컨콜 원문 |
+|---|---|
+| yfinance | ❌ 없음 |
+| 네이버 증권 | ❌ 없음(리포트 제목·요약만) |
+| DART | ❌ 없음(IR 개최 공시만) |
+| KIS | ❌ 없음 |
+| **Alpha Vantage** | ✅ **미국 기업, 무료 키로 하루 25회** |
+| SEC 8-K | △ 보도자료·CFO 코멘터리(일부 회사는 원고 전문) |
+
+그래서 **미국은 Alpha Vantage + SEC로 자동**, **한국은 IR 자료를 붙여넣고 AI로 분석**하는 구조입니다.
+
+---
+
+## 5. 보안 기본 규칙
+
+이 프로젝트는 아래를 **기본값**으로 지킵니다. 바꾸지 않는 것을 권장합니다.
+
+1. **키는 `.env`에만 둡니다.** 코드·YAML·문서에 키를 쓰지 않습니다. `.env`는 `.gitignore`에 있어 커밋되지 않습니다. `run.sh`는 `.env`를 만들 때 권한을 `600`(나만 읽기)으로 설정합니다.
+2. **화면에 키를 보여주지 않습니다.** 설정 화면은 "등록됨 / 미등록"만 표시합니다(끝자리도 숨김).
+3. **에러 메시지에서 키를 지웁니다.** URL의 `apikey=`, `crtfc_key=` 같은 값과 `.env`의 모든 값을 `***`로 바꿉니다(`security.redact`).
+4. **내 컴퓨터에서만 열립니다.** `.streamlit/config.toml`이 `127.0.0.1:8765`에만 바인딩합니다. 같은 와이파이의 다른 기기도 접속할 수 없습니다. `0.0.0.0`으로 바꾸지 마세요.
+5. **XSRF 보호를 켜고, 사용 통계 전송과 화면의 스택트레이스 노출을 끕니다.**
+6. **외부 데이터는 HTML로 넣기 전에 항상 이스케이프합니다.** 트랜스크립트·뉴스 제목 등에 섞인 스크립트가 실행되지 않습니다. AI 답변은 마크다운으로만 렌더링합니다.
+7. **AI는 도구 없이 실행합니다.** `claude -p --tools "" --safe-mode --strict-mcp-config`로 파일 읽기·명령 실행·웹 접근 도구를 모두 끕니다. 그래서 트랜스크립트 안에 "파일을 지워라" 같은 문장(프롬프트 인젝션)이 있어도 실행할 수단이 없습니다. 하위 프로세스에서는 `.env`의 키를 환경변수에서 지우고, 빈 임시 폴더에서 실행합니다.
+8. **입력을 검증합니다.** 티커·분기 형식을 검사해 `../` 같은 경로 조작을 막고, YAML은 `safe_load`로만 읽습니다(임의 객체 생성 차단).
+9. **키를 헤더로 보낼 수 있으면 헤더로 보냅니다**(Finnhub). 쿼리로만 받는 API(Alpha Vantage, DART)는 로그에 URL을 남기지 않습니다.
+10. **의존성 버전을 고정합니다**(`requirements.txt`).
+
+키가 유출된 것 같다면 해당 사이트에서 **키를 재발급(폐기)** 하고 `.env`를 새 값으로 바꾸세요.
+
+---
+
+## 6. 밖에서 접속하기: Tailscale 터널
+
+이 앱은 배포용이 아닙니다. 휴대폰이나 다른 컴퓨터에서 보고 싶을 때만 **Tailscale**로 터널을 엽니다. Tailscale은 내 기기끼리만 연결되는 사설 네트워크(VPN)입니다.
+
+### 6-1. 설치·로그인 (한 번만)
+
+1. <https://tailscale.com/download> 에서 **앱을 실행하는 컴퓨터**와 **접속할 기기**(휴대폰 등) 모두에 설치합니다.
+2. 두 기기에서 **같은 계정**으로 로그인합니다.
+3. 관리 콘솔 <https://login.tailscale.com/admin/dns> 에서 **MagicDNS**와 **HTTPS Certificates**를 켭니다(`serve`가 HTTPS 주소를 만들 때 필요).
+
+### 6-2. 내 기기에서만 보기 — `tailscale serve` (권장)
+
+앱을 평소처럼 실행한 상태(`./run.sh`)에서 **다른 터미널**을 열고:
+
+```bash
+tailscale serve --bg 8765
+```
+
+출력에 `https://<컴퓨터이름>.<tailnet이름>.ts.net` 주소가 나옵니다. **내 Tailscale 계정에 로그인한 기기에서만** 이 주소로 접속할 수 있습니다.
+앱은 계속 `127.0.0.1`에만 열려 있고, Tailscale이 HTTPS로 안전하게 전달해 줍니다. 그래서 설정을 바꿀 필요가 없습니다.
+
+```bash
+tailscale serve status     # 현재 열린 주소 확인
+tailscale serve reset      # 터널 닫기
+```
+
+> Windows에서는 `tailscale` 명령이 PATH에 없으면 `"C:\Program Files\Tailscale\tailscale.exe" serve --bg 8765`처럼 전체 경로로 실행하세요.
+> Tailscale 1.52 이전 버전은 명령 문법이 다릅니다. `tailscale version`으로 확인하고 최신으로 업데이트하세요.
+
+### 6-3. ⚠️ 공개 인터넷에 열기 — `tailscale funnel` (비권장)
+
+```bash
+tailscale funnel --bg 8765
+```
+
+이 명령은 **인터넷의 누구나** 주소만 알면 접속하게 만듭니다. 이 앱에는 **로그인 기능이 없어서**, 접속한 사람이 내 입력 데이터를 보고 수정할 수 있고, Ask Lens로 **내 Claude 플랜 사용량을 쓸 수 있습니다**. 꼭 필요하면 잠깐만 열고 `tailscale funnel reset`으로 바로 닫으세요. 스터디원과 공유하려면 funnel 대신 상대를 내 tailnet에 초대(*Share node*)하는 방식을 권장합니다.
+
+---
+
+## 7. 폴더 구조
+
+```text
+earnings-lens/
+├─ app.py                     # 진입점: 레일·상단 바·페이지 라우팅·코파일럿
+├─ run.sh / run.bat           # 원클릭 실행 스크립트
+├─ requirements.txt           # 버전 고정 의존성
+├─ .env.example               # 키 템플릿 (.env로 복사해서 사용, .env는 커밋 금지)
+├─ .streamlit/config.toml     # 127.0.0.1:8765 고정, 보안 설정, 테마
+├─ static/fonts/              # Pretendard 웹폰트 (OFL 라이선스)
+├─ earnings_lens/
+│  ├─ config.py               # .env 로딩, 키 목록
+│  ├─ security.py             # 입력 검증·키 마스킹·HTML 이스케이프
+│  ├─ service.py              # 소스 우선순위 병합 + 캐시 (화면은 이것만 호출)
+│  ├─ manual.py               # my_inputs/ 읽기·쓰기, AI 결과 병합
+│  ├─ ai.py                   # Claude Code CLI 호출 (도구 없음, 구조화 JSON)
+│  ├─ providers/              # yfinance · DART · SEC · Alpha Vantage · Finnhub · 네이버
+│  ├─ analysis/               # QoQ/YoY·판정, 컨센서스 스냅샷, 주가 반응
+│  └─ ui/                     # 테마 CSS, 카드·스트립·오브 컴포넌트, 셸
+├─ views/                     # 화면 9개
+├─ my_inputs/                 # ✍️ 내가 직접 넣는 값 (README·예시만 커밋)
+├─ data/                      # 🤖 자동 캐시·스냅샷·AI 결과 (커밋 안 함)
+├─ docs/API_GUIDE.md          # API 조사 결과와 근거
+└─ tests/                     # pytest
+```
+
+---
+
+## 8. 문제 해결 (FAQ)
+
+**`command not found: python3` / `'py'은(는) 내부 또는 외부 명령...`**
+Python이 설치되지 않았거나 PATH에 없습니다. 1-3 ②를 다시 하세요. Windows는 "Add python.exe to PATH" 체크가 핵심입니다.
+
+**브라우저에 "사이트에 연결할 수 없음"**
+터미널에서 앱이 실행 중인지 확인하세요. 포트 8765를 다른 프로그램이 쓰고 있다면 그 프로그램을 끄세요. 확인 명령: Mac `lsof -i :8765`, Windows `netstat -ano | findstr 8765`.
+
+**"분기 실적 데이터를 찾지 못했습니다"**
+티커를 확인하세요. 한국은 `.KS`/`.KQ`를 붙여야 합니다. yfinance가 일시적으로 막혔다면(`Too Many Requests`) 몇 분 뒤 다시 시도하세요.
+
+**AI 버튼이 비활성 / "Claude Code CLI를 찾지 못했습니다"**
+1-3 ③을 하고 **터미널을 새로 연 뒤 앱을 다시 실행**하세요. 그래도 안 되면 `which claude`(Windows `where claude`)로 나온 경로를 `.env`의 `CLAUDE_BIN=`에 넣으세요.
+
+**AI 분석이 "Claude CLI 오류"**
+터미널에서 `claude`를 한 번 실행해 로그인이 살아 있는지 확인하세요. 플랜 사용량 한도에 걸렸을 수도 있습니다.
+
+**Alpha Vantage "호출 한도에 도달"**
+무료는 하루 25회입니다. 내일 다시 시도하세요. 이미 받은 원문은 저장돼 있어 다시 호출하지 않습니다.
+
+**매출/영업이익 카드에 "컨센서스 없음"**
+과거 분기의 매출·영업이익 컨센서스는 무료로 구하기 어렵습니다. ① 미국은 Alpha Vantage 키를 넣으면 매출이 채워집니다. ② 앱을 실적 발표 **전에** 한 번 열어 두면 다음 분기 컨센서스가 스냅샷으로 저장됩니다. ③ **입력 관리**에서 `consensus`를 직접 넣을 수 있습니다.
+
+**한국 시세가 지연돼요**
+yfinance의 한국 시세는 약 15~20분 지연됩니다. 실시간이 필요하면 4장의 네이버 옵션을 참고하세요.
+
+**Tailscale 주소로 열면 화면이 계속 연결 중**
+`tailscale serve status`로 8765가 연결돼 있는지, 앱이 실행 중인지 확인하세요. 회사·학교 네트워크가 WebSocket을 막는 경우도 있습니다.
+
+---
+
+## 9. 개발자용 메모
+
+```bash
+source .venv/bin/activate
+pytest -q                    # 네트워크 없이 도는 단위 테스트 (계산·보안 규칙)
+streamlit run app.py         # http://127.0.0.1:8765
+```
+
+- 화면(`views/`)은 `service.py`만 부릅니다. 새 데이터 소스는 `providers/`에 추가하고 `service.py`에서 우선순위를 정하세요.
+- 외부 문자열을 HTML에 넣을 때는 반드시 `security.esc()` 또는 `components.card()`를 거치세요.
+- 디자인 토큰은 `earnings_lens/ui/theme.css`의 `:root` 한 곳에 있습니다. 디자인 결정 기록은 `DESIGN.md`, 제품 정의는 `PRODUCT.md`에 있습니다.
+- 커밋 전 점검: `git status`에 `.env`, `my_inputs/companies`, `data/`가 보이면 안 됩니다.
+
+### 라이선스
+
+코드: MIT. 폰트: Pretendard (SIL Open Font License 1.1, `static/fonts/LICENSE-Pretendard.txt`).
+데이터는 각 제공자의 이용약관을 따릅니다. 개인 학습·연구 용도로 사용하세요.
