@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-22T13:30:00Z",
+  "title": "Design System: Earnings Lens",
+  "extensions": {
+    "colorMeta": {
+      "desk-ground": { "role": "neutral", "displayName": "Desk Ground" },
+      "ink": { "role": "neutral", "displayName": "Ink" },
+      "periwinkle": { "role": "primary", "displayName": "Periwinkle", "tonalRamp": ["#1B2466", "#26338F", "#3346C9", "#4C63F0", "#7387F4", "#9DABF7", "#C7CFFB", "#E7EAFE"] },
+      "beat": { "role": "secondary", "displayName": "Beat", "tonalRamp": ["#05301F", "#08503A", "#0E8058", "#2E9C74", "#5DB794", "#93D1B6", "#C3E6D6", "#E2F3EB"] },
+      "miss": { "role": "secondary", "displayName": "Miss", "tonalRamp": ["#4A160F", "#7A2519", "#C23E2C", "#D2604F", "#DF8578", "#EAABA2", "#F4CEC8", "#FBE8E4"] },
+      "inline": { "role": "secondary", "displayName": "In-line", "tonalRamp": ["#352405", "#5A3D09", "#8C5F0E", "#A97C2C", "#C29C55", "#D8BD85", "#EAD8B4", "#F7EEDA"] },
+      "ai-violet": { "role": "tertiary", "displayName": "AI Violet" }
+    },
+    "typographyMeta": {
+      "verdict": { "displayName": "Verdict", "purpose": "The headline banner sentence that states beat / in-line / miss." },
+      "figure": { "displayName": "Figure", "purpose": "Stat card numbers; always tabular numerals." }
+    },
+    "shadows": [
+      { "name": "rest", "value": "0 1px 2px rgba(18, 20, 26, .04), 0 8px 24px -12px rgba(18, 20, 26, .14)", "purpose": "Every card at rest (--shadow)." },
+      { "name": "lift", "value": "0 2px 4px rgba(18, 20, 26, .05), 0 18px 36px -16px rgba(40, 52, 140, .26)", "purpose": "Card hover and popover (--shadow-lift)." }
+    ],
+    "motion": [
+      { "name": "ease-out", "value": "cubic-bezier(.16, 1, .3, 1)", "purpose": "All transitions and entrances (--ease-out)." },
+      { "name": "rise", "value": ".7s, stagger 70ms per card", "purpose": "Blur-in rise entrance for cards." },
+      { "name": "hover-lift", "value": "translateY(-4px) over .35s", "purpose": "Card hover." },
+      { "name": "orb-breathe", "value": "breathe 5s + morph 9s + blink 6s", "purpose": "AI orb idle life; disabled under prefers-reduced-motion." }
+    ],
+    "breakpoints": [
+      { "name": "mobile", "value": "760px", "purpose": "Rail becomes bottom bar, KPI grid 2x2, copilot icon-only." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Glass Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Base container for every section; glass surface, rest shadow, lifts on hover.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-title\">가이던스</div><p>다음 분기 매출 가이던스 54.0B ±2%</p></div>",
+      "css": ".ds-card { background: rgba(255,255,255,.80); backdrop-filter: blur(16px) saturate(1.3); border: 1px solid rgba(18,20,26,.08); border-radius: 20px; box-shadow: 0 1px 2px rgba(18,20,26,.04), 0 8px 24px -12px rgba(18,20,26,.14); padding: 18px 20px; color: #12141A; font-family: Pretendard, system-ui, sans-serif; transition: transform .35s cubic-bezier(.16,1,.3,1), box-shadow .35s cubic-bezier(.16,1,.3,1); } .ds-card:hover { transform: translateY(-4px); box-shadow: 0 2px 4px rgba(18,20,26,.05), 0 18px 36px -16px rgba(40,52,140,.26); } .ds-card-title { font-weight: 650; font-size: .95rem; letter-spacing: -.02em; margin-bottom: 8px; }"
+    },
+    {
+      "name": "Stat Card (beat)",
+      "kind": "card",
+      "refersTo": "stat-card-beat",
+      "description": "KPI figure tinted by its verdict, with a verdict chip.",
+      "html": "<div class=\"ds-stat\"><span class=\"ds-stat-label\">매출액</span><div class=\"ds-stat-value\">46.7B</div><span class=\"ds-chip-beat\">서프라이즈 +3.1%</span></div>",
+      "css": ".ds-stat { background: #E7F5EF; border-radius: 20px; padding: 18px 20px; font-family: Pretendard, system-ui, sans-serif; color: #12141A; } .ds-stat-label { font-size: .86rem; font-weight: 600; color: #474C59; } .ds-stat-value { font-size: 2rem; font-weight: 750; letter-spacing: -.03em; font-variant-numeric: tabular-nums; margin: 6px 0 10px; } .ds-chip-beat { background: #E2F3EB; color: #0E8058; border-radius: 999px; padding: 4px 9px; font-size: .78rem; font-weight: 650; }"
+    },
+    {
+      "name": "Verdict Chips",
+      "kind": "chip",
+      "refersTo": "verdict-chip-beat",
+      "description": "Beat / in-line / miss; the only uses of the verdict colours.",
+      "html": "<span class=\"ds-chip ds-beat\">서프라이즈</span> <span class=\"ds-chip ds-inline\">부합</span> <span class=\"ds-chip ds-miss\">쇼크</span>",
+      "css": ".ds-chip { border-radius: 999px; padding: 4px 9px; font: 650 .78rem Pretendard, system-ui, sans-serif; white-space: nowrap; } .ds-beat { background: #E2F3EB; color: #0E8058; } .ds-inline { background: #F7EEDA; color: #8C5F0E; } .ds-miss { background: #FBE8E4; color: #C23E2C; }"
+    },
+    {
+      "name": "Consensus Strip",
+      "kind": "custom",
+      "refersTo": "consensus-strip",
+      "description": "Signature: low–high consensus band, average tick and actual dot, built from positioned spans.",
+      "html": "<div class=\"ds-strip\"><span class=\"ds-line\"></span><span class=\"ds-band\"></span><span class=\"ds-tick\"></span><span class=\"ds-dot\"></span></div>",
+      "css": ".ds-strip { position: relative; height: 16px; width: 240px; } .ds-line { position: absolute; top: 7px; left: 0; right: 0; height: 2px; background: rgba(18,20,26,.14); border-radius: 2px; } .ds-band { position: absolute; top: 4px; left: 30%; width: 35%; height: 8px; background: #E7EAFE; border-radius: 4px; } .ds-tick { position: absolute; top: 2px; left: 47%; width: 2px; height: 12px; background: #3346C9; } .ds-dot { position: absolute; top: 1px; left: 72%; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: #0E8058; border: 2.5px solid #fff; box-shadow: 0 1px 3px rgba(18,20,26,.25); }"
+    },
+    {
+      "name": "AI Orb",
+      "kind": "custom",
+      "refersTo": "ai-orb",
+      "description": "Signature: blob with eyes whose hue is the call tone; grey with half-closed eyes when idle.",
+      "html": "<div class=\"ds-orb\"></div>",
+      "css": ".ds-orb { position: relative; width: 56px; height: 56px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #C7CFFB, #4C63F0 55%, #3346C9 100%); box-shadow: inset -6px -8px 16px rgba(0,0,0,.12), 0 10px 26px -10px rgba(76,99,240,.55); } .ds-orb::before, .ds-orb::after { content: ''; position: absolute; top: 40%; width: 11%; height: 19%; border-radius: 50%; background: #fff; } .ds-orb::before { left: 34%; } .ds-orb::after { right: 34%; }"
+    },
+    {
+      "name": "Ask Lens Button",
+      "kind": "button",
+      "refersTo": "copilot-button",
+      "description": "Floating copilot pill, bottom-right.",
+      "html": "<button class=\"ds-copilot\">Ask Lens</button>",
+      "css": ".ds-copilot { background: rgba(18,20,26,.9); color: #fff; border: 1px solid rgba(255,255,255,.12); border-radius: 999px; padding: 10px 18px 10px 14px; min-height: 48px; backdrop-filter: blur(14px); font: 650 .9rem Pretendard, system-ui, sans-serif; box-shadow: 0 14px 34px -14px rgba(40,52,140,.6); transition: transform .3s cubic-bezier(.16,1,.3,1), box-shadow .3s cubic-bezier(.16,1,.3,1); cursor: pointer; } .ds-copilot:hover { transform: translateY(-3px); box-shadow: 0 20px 40px -16px rgba(40,52,140,.7); } .ds-copilot:focus-visible { outline: 2px solid #4C63F0; outline-offset: 3px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Earnings Desk",
+    "overview": "An earnings desk where every headline number states its verdict against the street. Soft neutral glass cards on a cool ground; colour is reserved for verdicts and the AI orb's call tone.",
+    "keyCharacteristics": ["Each figure carries its consensus strip", "Verdict colours used only for beat / in-line / miss", "Orb hue = call tone", "Glass cards with staggered rise and hover lift", "Korean text never breaks mid-word"],
+    "rules": [
+      { "name": "Verdict Colour Rule", "body": "Beat, in-line and miss colours appear only for verdicts and up/down/live state.", "section": "colors" },
+      { "name": "Two Shadows Rule", "body": "Elevation is the rest and lift pair only; no hard offset shadows.", "section": "elevation" },
+      { "name": "Tabular Figures Rule", "body": "Every number uses tabular numerals.", "section": "typography" }
+    ],
+    "dos": ["Do define new tokens only in theme.css :root and mirror chart colours in components.py.", "Do give every figure a verdict and a source badge.", "Do draw graphics with positioned spans.", "Do honour reduced motion."],
+    "donts": ["Don't use <svg> in st.html; it is stripped.", "Don't tint a stat card when there is no consensus.", "Don't let Korean break mid-word."]
+  }
+}
