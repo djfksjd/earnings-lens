@@ -16,7 +16,7 @@ from ..security import safe_filename
 from .http import ProviderError, get
 
 _UA = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) "
-                     "Chrome/130 Safari/537.36 (personal research; earnings-lens)", "Accept-Language": "en-US"}
+                     "Chrome/130 Safari/537.36 (personal research; gaddong)", "Accept-Language": "en-US"}
 _LINK = re.compile(r"https://www\.fool\.com/earnings/call-transcripts/(\d{4})/(\d{2})/(\d{2})/[a-z0-9-]+/")
 _P = re.compile(r"<p>(.*?)</p>", re.S)
 _TAG = re.compile(r"<[^>]+>")

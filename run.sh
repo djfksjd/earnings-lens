@@ -20,5 +20,5 @@ if [ ! -f .env ]; then
   chmod 600 .env
   echo "▶ .env 파일을 만들었어요. 필요한 키를 나중에 채워 넣으세요."
 fi
-echo "▶ Earnings Lens 실행: http://127.0.0.1:8765  (종료: Ctrl+C)"
+echo "▶ Gaddong(가똥) 실행: http://127.0.0.1:8765  (종료: Ctrl+C)"
 exec streamlit run app.py

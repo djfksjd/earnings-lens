@@ -11,7 +11,7 @@ import pandas as pd
 from .. import config
 from .http import ProviderError, get
 
-_UA = {"User-Agent": "Mozilla/5.0 (personal research; earnings-lens)", "Referer": "https://m.stock.naver.com/"}
+_UA = {"User-Agent": "Mozilla/5.0 (personal research; gaddong)", "Referer": "https://m.stock.naver.com/"}
 UNIT = 1e8  # 재무 수치 단위: 억원
 
 

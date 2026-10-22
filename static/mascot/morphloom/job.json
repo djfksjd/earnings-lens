@@ -1,17 +1,17 @@
 {
  "schema": "morphloom.job/0.1",
- "id": "lens-orb-mascot",
+ "id": "gaddong-mascot",
  "target": "review",
- "request": "Earnings Lens 대시보드의 오브 캐릭터를 상황별로 움직이는 귀여운 3D 캐릭터 에이전트로 모델링 (몸체·눈·손·볼터치·소품을 편집 단위로 분리, 런타임 애니메이션용)",
+ "request": "Gaddong(가똥) 대시보드의 오브 캐릭터 에이전트 '가똥'을 상황별로 움직이는 귀여운 3D 캐릭터로 모델링 (몸체·눈·손·볼터치·소품을 편집 단위로 분리, 런타임 애니메이션용)",
  "sources": [
   {
    "viewId": "view_01",
-   "path": "work/lens-orb/sources/dashboard-orb.png",
+   "path": "work/gaddong/sources/dashboard-orb.png",
    "sha256": "78c7ed26e670dc37a9c9912a331fc633ee22c9956dc2c392a7f14eea19d5b9eb"
   },
   {
    "viewId": "view_02",
-   "path": "work/lens-orb/sources/design-spec.png",
+   "path": "work/gaddong/sources/design-spec.png",
    "sha256": "7f2cd2427ccba53abf0610eadc75a296eda2539005e229d4fb756a77ba0a74dd"
   }
  ],
@@ -79,7 +79,7 @@
      "brightness": 0.88,
      "inputFit": 55,
      "notes": [
-      "Crop of the Earnings Lens dashboard hero orb (CSS render), upscaled from about 84 px. Styling reference only; no dimensions.",
+      "Crop of the Gaddong dashboard hero orb (CSS render), upscaled from about 84 px. Styling reference only; no dimensions.",
       "Eye shape and hand placement also follow a concept image the user attached in chat (not stored as a file)."
      ]
     },
@@ -245,12 +245,12 @@
  },
  "assembly": {
   "schema": "morphloom.assembly/0.1",
-  "name": "Earnings Lens orb mascot",
+  "name": "Gaddong (가똥) mascot",
   "units": "mm",
   "components": [
    {
     "id": "body",
-    "name": "Lens orb body",
+    "name": "Gaddong body",
     "category": "enclosure",
     "materialName": "pearl polymer",
     "detail": "Main sphere. Diameter normalised to 200 mm (inferred; the dashboard render carries no scale).",

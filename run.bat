@@ -16,5 +16,5 @@ if not exist .env (
   copy .env.example .env >nul
   echo .env 파일을 만들었어요. 필요한 키를 나중에 채워 넣으세요.
 )
-echo [3/3] Earnings Lens 실행: http://127.0.0.1:8765  (종료: Ctrl+C)
+echo [3/3] Gaddong(가똥) 실행: http://127.0.0.1:8765  (종료: Ctrl+C)
 streamlit run app.py

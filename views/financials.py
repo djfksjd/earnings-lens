@@ -4,10 +4,10 @@ from __future__ import annotations
 import plotly.graph_objects as go
 import streamlit as st
 
-from earnings_lens import service
-from earnings_lens.analysis import metrics
-from earnings_lens.ui import components as c
-from earnings_lens.ui import fmt
+from gaddong import service
+from gaddong.analysis import metrics
+from gaddong.ui import components as c
+from gaddong.ui import fmt
 from views import _common as k
 
 

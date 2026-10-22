@@ -6,14 +6,14 @@ import statistics
 import pandas as pd
 import streamlit as st
 
-from earnings_lens import ai, config, manual, service
-from earnings_lens.analysis.metrics import prev_period
-from earnings_lens.providers import alphavantage, fool, sec
-from earnings_lens.providers.http import ProviderError
-from earnings_lens.security import esc
-from earnings_lens.ui import components as c
-from earnings_lens.ui import mascot
-from earnings_lens.ui import fmt
+from gaddong import ai, config, manual, service
+from gaddong.analysis.metrics import prev_period
+from gaddong.providers import alphavantage, fool, sec
+from gaddong.providers.http import ProviderError
+from gaddong.security import esc
+from gaddong.ui import components as c
+from gaddong.ui import mascot
+from gaddong.ui import fmt
 from views import _common as k
 
 

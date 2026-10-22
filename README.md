@@ -1,4 +1,4 @@
-# Earnings Lens — 실적 시즌 리서치 데스크
+# Gaddong(가똥) — 실적 시즌 리서치 데스크
 
 미국·한국 상장사의 **분기 실적을 한 화면에서 정리**하는 로컬 대시보드입니다.
 종목과 분기를 고르면 아래 9가지를 자동으로 모으고, 자동으로 못 채우는 값은 직접 넣거나 AI(Claude 구독 플랜)로 추출합니다.
@@ -16,15 +16,15 @@
 | 9 | 주가 반응 (갭·D+1·D+5·D+20·시장 대비) | 자동 (yfinance, 한국은 KRX 공식 시세로 빈 날 보완) |
 
 <p align="center">
-  <img src="docs/images/overview-desktop.jpg" alt="Earnings Lens 개요 화면 (데스크톱)" width="78%">
-  <img src="docs/images/overview-mobile.jpg" alt="Earnings Lens 개요 화면 (모바일)" width="18%">
+  <img src="docs/images/overview-desktop.jpg" alt="Gaddong 개요 화면 (데스크톱)" width="78%">
+  <img src="docs/images/overview-mobile.jpg" alt="Gaddong 개요 화면 (모바일)" width="18%">
 </p>
 
 <p align="center">
-  <img src="docs/images/mascot-moods.jpg" alt="Lens 마스코트 — 실적 판정·컨콜 톤·분석 상태에 따라 바뀌는 11가지 기분" width="96%">
+  <img src="docs/images/mascot-moods.jpg" alt="가똥 마스코트 — 실적 판정·컨콜 톤·분석 상태에 따라 바뀌는 11가지 기분" width="96%">
 </p>
 
-**Lens 마스코트**: 화면 곳곳의 오브 캐릭터가 실적 판정(서프라이즈·상회·부합·하회·쇼크), 컨콜 톤, 분석 상태에 맞춰 표정과 동작을 바꿉니다. 마우스를 따라 보고, 클릭하면 반응해요. → [2-17. Lens 마스코트](#2-17-lens-마스코트-3d-캐릭터)
+**가똥 마스코트**: 화면 곳곳의 오브 캐릭터가 실적 판정(서프라이즈·상회·부합·하회·쇼크), 컨콜 톤, 분석 상태에 맞춰 표정과 동작을 바꿉니다. 마우스를 따라 보고, 클릭하면 반응해요. → [2-17. 가똥 마스코트](#2-17-가똥-마스코트-3d-캐릭터)
 
 - **주소는 고정입니다: <http://127.0.0.1:8765>**
 - 유료 API는 하나도 쓰지 않습니다. 키가 하나도 없어도 1·2(EPS)·9번은 바로 동작합니다.
@@ -45,7 +45,7 @@
    - 1-6. API 키 등록 (.env)
 2. [화면 사용법 (상세)](#2-화면-사용법-상세)
    - [2-1. 처음 5분 따라하기](#2-1-처음-5분-따라하기-키-없이) · [2-2. 화면 구성](#2-2-화면-구성-모든-화면-공통) · [2-3. 표시 읽는 법](#2-3-공통으로-보이는-표시-읽는-법)
-   - 화면별: [개요](#2-4-개요) · [실적](#2-5-실적) · [사업부문](#2-6-사업부문) · [KPI](#2-7-kpi) · [컨콜 결과](#2-8-컨콜--분석-결과-탭) · [컨콜 원문·AI](#2-9-컨콜--원문--ai-실행-탭) · [가이던스](#2-10-가이던스--카탈리스트) · [주가 반응](#2-11-주가-반응) · [입력 관리](#2-13-입력-관리) · [설정](#2-14-설정) · [Ask Lens](#2-15-ask-lens-ai-질문) · [Lens 마스코트](#2-17-lens-마스코트-3d-캐릭터)
+   - 화면별: [개요](#2-4-개요) · [실적](#2-5-실적) · [사업부문](#2-6-사업부문) · [KPI](#2-7-kpi) · [컨콜 결과](#2-8-컨콜--분석-결과-탭) · [컨콜 원문·AI](#2-9-컨콜--원문--ai-실행-탭) · [가이던스](#2-10-가이던스--카탈리스트) · [주가 반응](#2-11-주가-반응) · [입력 관리](#2-13-입력-관리) · [설정](#2-14-설정) · [Ask Gaddong](#2-15-ask-gaddong-ai-질문) · [가똥 마스코트](#2-17-가똥-마스코트-3d-캐릭터)
    - [2-12. 실적 발표 당일 순서](#2-12-실적-발표-당일-순서-처음부터-끝까지)
 3. [내가 직접 해야 하는 일 vs 자동으로 되는 일](#3-내가-직접-해야-하는-일-vs-자동으로-되는-일)
    - [3-3. 키를 넣으면 화면이 어떻게 달라지나](#3-3-키를-넣으면-화면이-어떻게-달라지나) · [3-4. my_inputs 작성 완전 가이드](#3-4-my_inputs-작성-완전-가이드)
@@ -128,7 +128,7 @@ py --version
 
 #### ③ Claude Code CLI (AI 기능용, Claude 구독 플랜 필요)
 
-AI 분석(컨콜 톤, 핵심 발언, 세그먼트·가이던스 추출, Ask Lens)은 내 컴퓨터의 Claude Code CLI를 통해 **Claude 구독 플랜**(Pro 또는 Max)으로 동작합니다. AI를 안 쓸 거라면 건너뛰어도 앱은 동작합니다.
+AI 분석(컨콜 톤, 핵심 발언, 세그먼트·가이던스 추출, Ask Gaddong)은 내 컴퓨터의 Claude Code CLI를 통해 **Claude 구독 플랜**(Pro 또는 Max)으로 동작합니다. AI를 안 쓸 거라면 건너뛰어도 앱은 동작합니다.
 
 **Mac / Linux**
 
@@ -162,13 +162,13 @@ claude doctor
 
 ```bash
 cd ~/Documents
-git clone https://github.com/djfksjd/earnings-lens.git
-cd earnings-lens
+git clone https://github.com/djfksjd/gaddong.git
+cd gaddong
 ```
 
 Windows PowerShell에서는 `cd ~/Documents` 대신 `cd $HOME\Documents`를 씁니다.
 
-그다음 Antigravity에서 **File → Open Folder** → 방금 받은 `earnings-lens` 폴더를 엽니다.
+그다음 Antigravity에서 **File → Open Folder** → 방금 받은 `gaddong` 폴더를 엽니다.
 
 ### 1-5. 실행하기
 
@@ -255,7 +255,7 @@ DART_API_KEY=여기에_키
 |---|---|---|
 | 왼쪽 세로 막대 | **아이콘 레일** | 화면 이동. 아이콘에 마우스를 올리면 이름이 나옵니다. 지금 보고 있는 화면은 검은 칸으로 표시됩니다. |
 | 위쪽 가로 막대 | **상단 바** | 회사 이름·업종, 종목 상자, 분기 상자, 실시간 가격 |
-| 오른쪽 아래 | **Ask Lens** | AI에게 질문하는 버튼 |
+| 오른쪽 아래 | **Ask Gaddong** | AI에게 질문하는 버튼 |
 | 상단 바 아래 | 노란 경고 문구 | 데이터를 일부 못 가져왔을 때 이유가 나옵니다(예: 키 미등록, 일시 차단). |
 
 **아이콘 레일 순서** (위에서 아래로)
@@ -315,7 +315,7 @@ DART_API_KEY=여기에_키
 | 쇼크 | −10% 이하 | 빨강 진하게 |
 | 컨센서스 없음 | 비교할 값이 없음 | 회색 |
 
-기준값은 `earnings_lens/analysis/metrics.py`의 `INLINE`(2.0), `BIG`(10.0)에서 바꿀 수 있습니다.
+기준값은 `gaddong/analysis/metrics.py`의 `INLINE`(2.0), `BIG`(10.0)에서 바꿀 수 있습니다.
 
 **컨센서스 스트립** (지표 카드 아래 가로 막대)
 
@@ -330,11 +330,11 @@ DART_API_KEY=여기에_키
 - **컨센서스 입력**을 누르면 **같은 종목·분기**의 입력 관리 화면으로 갑니다.
 - 범위(상단·하단)가 없으면 파란 띠 없이 눈금과 점만 나옵니다.
 
-**Lens 마스코트** (눈이 달린 3D 오브 캐릭터)
+**가똥 마스코트** (눈이 달린 3D 오브 캐릭터)
 
 - **표정과 동작이 곧 판정**입니다. 헤드라인에서는 실적 판정(★ 별 눈 = 서프라이즈, ^ ^ = 상회, 기본 눈 = 부합, 처진 눈 = 하회, O O = 쇼크, 돋보기 = 컨센서스 없음), 컨콜 톤 카드에서는 톤을 보여줍니다.
 - 몸 색은 컨콜 톤 색으로 물듭니다. 초록 쪽은 자신감·긍정, 파랑은 중립, 주황·빨강은 신중·부정입니다. 톤이 없으면 기본 페리윙클입니다.
-- – – 감은 눈에 Zz가 뜨면 **아직 톤 분석 전**이라는 뜻입니다. 자세한 표는 [2-17](#2-17-lens-마스코트-3d-캐릭터)에 있습니다.
+- – – 감은 눈에 Zz가 뜨면 **아직 톤 분석 전**이라는 뜻입니다. 자세한 표는 [2-17](#2-17-가똥-마스코트-3d-캐릭터)에 있습니다.
 
 ### 2-4. 개요
 
@@ -342,7 +342,7 @@ DART_API_KEY=여기에_키
 
 | 영역 | 내용 | 비어 있을 때 |
 |---|---|---|
-| **헤드라인 배너** | 판정에 맞춰 움직이는 Lens 마스코트(말풍선으로 기분 표시), "FY27 Q2 실적, 컨센서스를 넘었습니다" 같은 한 문장과 판정 칩. 아래 줄에 분기말, 발표 일시, **판정 기준 지표**가 나옵니다. 판정 기준은 컨센서스가 있는 지표 중 **영업이익 → EPS → 매출 → EBITDA** 순서로 첫 번째입니다. | "비교할 컨센서스가 아직 없습니다" |
+| **헤드라인 배너** | 판정에 맞춰 움직이는 가똥 마스코트(말풍선으로 기분 표시), "FY27 Q2 실적, 컨센서스를 넘었습니다" 같은 한 문장과 판정 칩. 아래 줄에 분기말, 발표 일시, **판정 기준 지표**가 나옵니다. 판정 기준은 컨센서스가 있는 지표 중 **영업이익 → EPS → 매출 → EBITDA** 순서로 첫 번째입니다. | "비교할 컨센서스가 아직 없습니다" |
 | **4대 지표 카드** | 매출액·영업이익·EBITDA·EPS의 당분기 값, QoQ·YoY, 컨센서스 스트립, 출처. 컨센서스가 있으면 판정 칩이 붙고 카드 배경이 판정 색으로 옅게 물듭니다. | "컨센서스 미입력" |
 | **주가 반응** | 반응일 수익률, 갭, D+5, 시장 대비 초과수익과 최근 몇 달 주가. 점선은 실적 발표 시점입니다. | 발표 직후라 데이터가 없으면 안내 문구 |
 | **컨콜 톤** | 톤에 맞춰 움직이는 마스코트, 톤 라벨, 전분기 대비 변화, 톤 막대, 요약, 달라진 점 3개 | "컨콜 화면에서 AI 분석을 실행하세요" |
@@ -398,7 +398,7 @@ DART_API_KEY=여기에_키
 
 <p align="center"><img src="docs/images/call-results.jpg" alt="컨콜 분석 결과 탭 (분석 전)" width="90%"></p>
 
-분석 전에는 위 캡처처럼 Lens가 졸고 있고(– – 눈, Zz) 안내만 나옵니다. 분석이 끝나면 톤에 맞춰 기분이 바뀝니다(자신감→뿌듯, 긍정→좋아요, 신중→아쉬워요, 부정→속상해요). 분석 후에는 아래 카드가 채워집니다.
+분석 전에는 위 캡처처럼 가똥이 졸고 있고(– – 눈, Zz) 안내만 나옵니다. 분석이 끝나면 톤에 맞춰 기분이 바뀝니다(자신감→뿌듯, 긍정→좋아요, 신중→아쉬워요, 부정→속상해요). 분석 후에는 아래 카드가 채워집니다.
 
 | 카드 | 내용 |
 |---|---|
@@ -521,13 +521,13 @@ DART_API_KEY=여기에_키
 - **AI (Claude 플랜)**: 사용하는 모델과 Claude Code CLI 상태가 나옵니다. **연결 테스트**를 누르면 "연결됨" 같은 짧은 답이 와야 정상입니다.
 - **보안 기본 규칙**: 5장의 요약입니다.
 
-### 2-15. Ask Lens (AI 질문)
+### 2-15. Ask Gaddong (AI 질문)
 
-<p align="center"><img src="docs/images/ask-lens.jpg" alt="Ask Lens 실제 답변 예시" width="460"></p>
+<p align="center"><img src="docs/images/ask-gaddong.jpg" alt="Ask Gaddong 실제 답변 예시" width="460"></p>
 
-> 위 캡처는 실제 답변입니다. 화면의 숫자(조정 EPS 2.22 vs 컨센 2.09, SEC XBRL 부문 매출, 가이던스와 다음 분기 컨센서스)만 근거로, 항목마다 출처(자동·AI 추출)를 밝혀 답했습니다. 창 위쪽에서 Lens가 손을 흔들어 인사합니다.
+> 위 캡처는 실제 답변입니다. 화면의 숫자(조정 EPS 2.22 vs 컨센 2.09, SEC XBRL 부문 매출, 가이던스와 다음 분기 컨센서스)만 근거로, 항목마다 출처(자동·AI 추출)를 밝혀 답했습니다. 창 위쪽에서 가똥이 손을 흔들어 인사합니다.
 
-1. 오른쪽 아래 **Ask Lens**를 누릅니다.
+1. 오른쪽 아래 **Ask Gaddong**를 누릅니다.
 2. 질문을 쓰고 **질문하기**를 누릅니다(최대 1,000자).
 
 - **지금 보고 있는 종목·분기 데이터만** 근거로 답합니다.
@@ -543,16 +543,16 @@ DART_API_KEY=여기에_키
 ### 2-16. 모바일·다른 기기에서 보기
 
 - 창 폭이 760~1180px(태블릿·좁은 창)이면 지표 카드와 개요 카드가 2열로 접히고, 상단 바가 두 줄이 됩니다.
-- 760px 이하(휴대폰)면 레일이 아래쪽 막대로 바뀌고, 지표 카드는 2×2로 배치됩니다. Ask Lens는 아이콘만 남습니다.
+- 760px 이하(휴대폰)면 레일이 아래쪽 막대로 바뀌고, 지표 카드는 2×2로 배치됩니다. Ask Gaddong는 아이콘만 남습니다.
 - 기본적으로 앱은 **이 컴퓨터에서만** 열립니다. 휴대폰에서 보려면 6장 Tailscale을 따라 하세요.
 
 ---
 
-### 2-17. Lens 마스코트 (3D 캐릭터)
+### 2-17. 가똥 마스코트 (3D 캐릭터)
 
-<p align="center"><img src="docs/images/mascot-moods.jpg" alt="Lens 마스코트 기분 11가지" width="96%"></p>
+<p align="center"><img src="docs/images/mascot-moods.jpg" alt="가똥 마스코트 기분 11가지" width="96%"></p>
 
-개요 헤드라인, 컨콜 톤 카드, Ask Lens 창의 오브 캐릭터는 상황에 맞춰 표정과 동작이 바뀝니다. 마우스를 따라 보고, 클릭하면 반응합니다.
+개요 헤드라인, 컨콜 톤 카드, Ask Gaddong 창의 오브 캐릭터는 상황에 맞춰 표정과 동작이 바뀝니다. 마우스를 따라 보고, 클릭하면 반응합니다.
 
 | 상황 | 기분 | 눈 · 동작 |
 |---|---|---|
@@ -565,8 +565,8 @@ DART_API_KEY=여기에_키
 | 컨콜 톤 분석 전 | 졸려요 | – – 감은 눈, Zz |
 | 톤: 자신감 / 긍정 / 신중 / 부정 | 뿌듯 / 좋아요 / 아쉬워요 / 속상해요 | 톤 색으로 몸이 물든다 |
 
-- 모델: Morphloom(Sceliph, 로컬 3D 에셋 도구)으로 만든 `static/mascot/lens-orb.glb`(몸·눈·손·볼·돋보기·별이 이름 있는 부품 11개). 원본은 `static/mascot/morphloom/`에 있습니다.
-  - `job.json`: AssemblyIR(형상·재질)과 근거 팩. Morphloom 작업 폴더의 `work/lens-orb/`에 두고 `npm run morphloom -- build --job work/lens-orb/job.json --out outputs/<새 폴더>`로 다시 빌드합니다.
+- 모델: Morphloom(Sceliph, 로컬 3D 에셋 도구)으로 만든 `static/mascot/gaddong.glb`(몸·눈·손·볼·돋보기·별이 이름 있는 부품 11개). 원본은 `static/mascot/morphloom/`에 있습니다.
+  - `job.json`: AssemblyIR(형상·재질)과 근거 팩. Morphloom 작업 폴더의 `work/gaddong/`에 두고 `npm run morphloom -- build --job work/gaddong/job.json --out outputs/<새 폴더>`로 다시 빌드합니다.
   - `sources/`: 근거 이미지(대시보드 오브 캡처, 치수를 정한 설계 도면 1px = 1mm). `run-report.json`: 빌드 결과(`review-pass`, 토폴로지·GLB 검증 통과).
   - 애니메이션은 리깅(뼈대)이 아니라 런타임에서 부품을 움직이는 절차적 동작이라, Morphloom 기준의 애니메이션 납품 단계는 아닙니다.
 - 런타임: `static/mascot/src/mascot.js`(three.js r179) → `static/mascot/mascot.bundle.js`. 고친 뒤 `THREE_NODE_MODULES=<three가 든 node_modules> scripts/build_mascot.sh`로 다시 빌드합니다.
@@ -786,7 +786,7 @@ notes: |
 | 네이버 증권 | `NAVER_SCRAPING_ENABLED` | 선택(옵트인) | — | 한국 실시간 시세, 분기 실적·컨센서스(E), 목표주가, 리포트 제목 |
 | MarketBeat | `MARKETBEAT_SCRAPING_ENABLED` | 선택(옵트인) | 종목당 하루 1회 | 미국 과거 8개 분기 매출·EPS 컨센서스 |
 | Motley Fool | `FOOL_SCRAPING_ENABLED` | 선택(옵트인) | 버튼 1회당 1건 | 미국 컨콜 원문 |
-| Claude 플랜 | (키 없음, CLI 로그인) | AI 기능 | 플랜 사용량 | 톤·발언·Q&A·세그먼트·가이던스·KPI 추출, Ask Lens |
+| Claude 플랜 | (키 없음, CLI 로그인) | AI 기능 | 플랜 사용량 | 톤·발언·Q&A·세그먼트·가이던스·KPI 추출, Ask Gaddong |
 
 ### 등록 방법
 
@@ -911,22 +911,22 @@ tailscale serve reset      # 터널 닫기
 tailscale funnel --bg 8765
 ```
 
-이 명령은 **인터넷의 누구나** 주소만 알면 접속하게 만듭니다. 이 앱에는 **로그인 기능이 없어서**, 접속한 사람이 내 입력 데이터를 보고 수정할 수 있고, Ask Lens로 **내 Claude 플랜 사용량을 쓸 수 있습니다**. 꼭 필요하면 잠깐만 열고 `tailscale funnel reset`으로 바로 닫으세요. 스터디원과 공유하려면 funnel 대신 상대를 내 tailnet에 초대(*Share node*)하는 방식을 권장합니다.
+이 명령은 **인터넷의 누구나** 주소만 알면 접속하게 만듭니다. 이 앱에는 **로그인 기능이 없어서**, 접속한 사람이 내 입력 데이터를 보고 수정할 수 있고, Ask Gaddong로 **내 Claude 플랜 사용량을 쓸 수 있습니다**. 꼭 필요하면 잠깐만 열고 `tailscale funnel reset`으로 바로 닫으세요. 스터디원과 공유하려면 funnel 대신 상대를 내 tailnet에 초대(*Share node*)하는 방식을 권장합니다.
 
 ---
 
 ## 7. 폴더 구조
 
 ```text
-earnings-lens/
+gaddong/
 ├─ app.py                     # 진입점: 레일·상단 바·페이지 라우팅·코파일럿
 ├─ run.sh / run.bat           # 원클릭 실행 스크립트
 ├─ requirements.txt           # 버전 고정 의존성
 ├─ .env.example               # 키 템플릿 (.env로 복사해서 사용, .env는 커밋 금지)
 ├─ .streamlit/config.toml     # 127.0.0.1:8765 고정, 보안 설정, 테마
 ├─ static/fonts/              # Pretendard 웹폰트 (OFL 라이선스)
-├─ static/mascot/             # Lens 마스코트: lens-orb.glb(모델), mascot.bundle.js(런타임), src/(원본), morphloom/(3D 모델 원본 IR·근거 이미지·빌드 리포트)
-├─ earnings_lens/
+├─ static/mascot/             # 가똥 마스코트: gaddong.glb(모델), mascot.bundle.js(런타임), src/(원본), morphloom/(3D 모델 원본 IR·근거 이미지·빌드 리포트)
+├─ gaddong/
 │  ├─ config.py               # .env 로딩, 키 목록
 │  ├─ security.py             # 입력 검증·키 마스킹·HTML 이스케이프
 │  ├─ service.py              # 소스 우선순위 병합 + 캐시 (화면은 이것만 호출)
@@ -985,7 +985,7 @@ streamlit run app.py         # http://127.0.0.1:8765
 
 - 화면(`views/`)은 `service.py`만 부릅니다. 새 데이터 소스는 `providers/`에 추가하고 `service.py`에서 우선순위를 정하세요.
 - 외부 문자열을 HTML에 넣을 때는 반드시 `security.esc()` 또는 `components.card()`를 거치세요.
-- 디자인 토큰은 `earnings_lens/ui/theme.css`의 `:root` 한 곳에 있습니다. 디자인 결정 기록은 `DESIGN.md`, 제품 정의는 `PRODUCT.md`에 있습니다.
+- 디자인 토큰은 `gaddong/ui/theme.css`의 `:root` 한 곳에 있습니다. 디자인 결정 기록은 `DESIGN.md`, 제품 정의는 `PRODUCT.md`에 있습니다.
 - 커밋 전 점검: `git status`에 `.env`, `my_inputs/companies`, `data/`가 보이면 안 됩니다.
 
 ### 라이선스

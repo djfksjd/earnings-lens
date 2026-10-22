@@ -1,15 +1,15 @@
 {
   "schema": "morphloom.job-result/0.1",
-  "jobId": "lens-orb-mascot",
+  "jobId": "gaddong-mascot",
   "target": "review",
-  "assemblyFingerprint": "786af04b1ec842fc388b843e2f2b90a25af54ca9121fb63fe586e92ea26b9f59",
+  "assemblyFingerprint": "f1456fe6d2c25d1707315e053dbf0c9bf3c8a2c867788412e0268bb4eca8aeae",
   "sourceAudit": {
     "schema": "morphloom.source-audit/0.1",
     "pass": true,
     "receipts": [
       {
         "viewId": "view_01",
-        "path": "work/lens-orb/sources/dashboard-orb.png",
+        "path": "work/gaddong/sources/dashboard-orb.png",
         "sha256": "78c7ed26e670dc37a9c9912a331fc633ee22c9956dc2c392a7f14eea19d5b9eb",
         "bytes": 39443,
         "mimeType": "image/png",
@@ -18,7 +18,7 @@
       },
       {
         "viewId": "view_02",
-        "path": "work/lens-orb/sources/design-spec.png",
+        "path": "work/gaddong/sources/design-spec.png",
         "sha256": "7f2cd2427ccba53abf0610eadc75a296eda2539005e229d4fb756a77ba0a74dd",
         "bytes": 14184,
         "mimeType": "image/png",
@@ -100,7 +100,7 @@
   },
   "route": {
     "schema": "morphloom.modeling-route/0.1",
-    "request": "Earnings Lens 대시보드의 오브 캐릭터를 상황별로 움직이는 귀여운 3D 캐릭터 에이전트로 모델링 (몸체·눈·손·볼터치·소품을 편집 단위로 분리, 런타임 애니메이션용)",
+    "request": "Gaddong(가똥) 대시보드의 오브 캐릭터 에이전트 '가똥'을 상황별로 움직이는 귀여운 3D 캐릭터로 모델링 (몸체·눈·손·볼터치·소품을 편집 단위로 분리, 런타임 애니메이션용)",
     "domains": [
       "human",
       "animation"
@@ -178,8 +178,8 @@
   "releaseAllowed": false,
   "blockers": [],
   "status": "review-pass",
-  "glbSha256": "4bf00b9de9815fc85c54b63be31ffe502eb5c55fa685b73019f2cab971a14614",
-  "repeatGlbSha256": "4bf00b9de9815fc85c54b63be31ffe502eb5c55fa685b73019f2cab971a14614",
+  "glbSha256": "5e13b50a66b626b28c9baf22b215521e5b91935bee7a658bb3e3f7d642f411ba",
+  "repeatGlbSha256": "5e13b50a66b626b28c9baf22b215521e5b91935bee7a658bb3e3f7d642f411ba",
   "byteDeterministic": true,
   "validation": {
     "status": "pass",
@@ -205,6 +205,6 @@
     "parts": 11,
     "triangles": 31044,
     "vertices": 34388,
-    "bytes": 1972948
+    "bytes": 1972944
   }
 }

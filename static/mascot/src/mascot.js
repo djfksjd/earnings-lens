@@ -1,5 +1,5 @@
-// Lens 마스코트 — Morphloom으로 모델링한 GLB(부품 이름 유지)를 불러와 기분별로 움직인다.
-// 빌드: scripts/build_mascot.sh → static/mascot/mascot.bundle.js (window.LensMascot)
+// Gaddong(가똥) 마스코트 — Morphloom으로 모델링한 GLB(부품 이름 유지)를 불러와 기분별로 움직인다.
+// 빌드: scripts/build_mascot.sh → static/mascot/mascot.bundle.js (window.GaddongMascot)
 // 모델 단위는 mm(몸 지름 200), +Y 위, +Z 얼굴 방향.
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -491,7 +491,7 @@ export async function boot(el, opts = {}) {
     if (!res.ok) throw new Error(`GLB ${res.status}`);
     return await mount(el, { ...opts, glb: await res.arrayBuffer() });
   } catch (e) {
-    console.warn('[LensMascot]', e);
+    console.warn('[GaddongMascot]', e);
     el.innerHTML = opts.fallback || '';
     return null;
   }

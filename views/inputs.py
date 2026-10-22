@@ -4,9 +4,9 @@ from __future__ import annotations
 import streamlit as st
 import yaml
 
-from earnings_lens import config, manual
-from earnings_lens.security import clean_ticker
-from earnings_lens.ui import components as c
+from gaddong import config, manual
+from gaddong.security import clean_ticker
+from gaddong.ui import components as c
 from views import _common as k
 
 TEMPLATE = """# 이 파일은 내가 직접 넣는 값이에요. 비워둔 항목은 자동 수집·AI 결과를 씁니다.

@@ -5,7 +5,7 @@ primary_target: "app.py"
 related_targets: ["views"]
 ---
 
-Scope: Earnings Lens Streamlit app shell + all views. Mode: Operate (code-led).
+Scope: Gaddong Streamlit app shell + all views. Mode: Operate (code-led).
 Audience/job: investing-study creator reviewing one ticker x one quarter right after earnings; shares screenshots.
 
 ## Direction contract
@@ -16,7 +16,7 @@ OWN-WORLD: Cool off-white ground (#F4F5F8) with ink #12141A, glass cards (white 
 
 STORY: Visitor picks ticker+quarter, reads the verdict row in two seconds (beat/miss on revenue, OP, EBITDA, EPS with QoQ/YoY), then scans segments, KPIs, tone shift, guidance, quotes, catalysts and price reaction; every figure is labelled auto / my input / AI.
 
-FIRST VIEWPORT: Left icon rail (ink logo mark on top). Top bar: ticker search, quarter select, live price pill with change and delay badge. Headline verdict banner: tone orb + one-sentence verdict ("2Q26 실적, 컨센서스를 넘었습니다") + verdict chip — the two-second read. Row 1: four KPI stat cards each with value, QoQ, YoY and the consensus strip. Row 2 bento (bottoms aligned): wide column = price-reaction chart over tone card; guidance card; next catalysts card. Mobile: KPI cards 2x2, rail becomes bottom bar, Ask Lens collapses to an icon circle. Floating "Ask Lens" pill bottom-right.
+FIRST VIEWPORT: Left icon rail (ink logo mark on top). Top bar: ticker search, quarter select, live price pill with change and delay badge. Headline verdict banner: tone orb + one-sentence verdict ("2Q26 실적, 컨센서스를 넘었습니다") + verdict chip — the two-second read. Row 1: four KPI stat cards each with value, QoQ, YoY and the consensus strip. Row 2 bento (bottoms aligned): wide column = price-reaction chart over tone card; guidance card; next catalysts card. Mobile: KPI cards 2x2, rail becomes bottom bar, Ask Gaddong collapses to an icon circle. Floating "Ask Gaddong" pill bottom-right.
 
 FORM: Brief-pinned minimal AI SaaS dashboard, adapted. Signature move: consensus strip (estimate low-high band, consensus tick, actual dot coloured by verdict) plus tone-coloured AI orb. seed: none (brief-pinned) — the user pinned the aesthetic in the request, so per new-work §3 the roll is not run; mode-operate.md governs.
 

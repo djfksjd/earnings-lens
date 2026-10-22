@@ -8,7 +8,7 @@ from ..security import clean_period, clean_ticker, esc
 from . import components as c
 from . import fmt, mascot
 
-LOGO = '<div class="rail-logo" title="Earnings Lens" aria-label="Earnings Lens"><span></span></div>'
+LOGO = '<div class="rail-logo" title="Gaddong(가똥)" aria-label="Gaddong(가똥)"><span></span></div>'
 
 
 def rail(pages: list[st.Page], bottom: list[st.Page], current: st.Page) -> None:
@@ -117,12 +117,12 @@ def price_pill(ticker: str) -> None:
 def copilot(rep: service.Report | None) -> None:
     ok, why = ai.available()
     with st.container(key="copilot"):
-        with st.popover("Ask Lens", icon=":material/auto_awesome:"):
+        with st.popover("Ask Gaddong", icon=":material/auto_awesome:"):
             pic, text = st.columns([0.3, 0.7], vertical_alignment="center", gap="small")
             with pic:
                 mascot.render("hello" if ok else "sleepy", height=84, bubble=False)
             with text:
-                st.html('<div><b>Lens</b><br><span class="card-sub">지금 보고 있는 종목·분기 데이터로만 답해요</span></div>')
+                st.html('<div><b>Gaddong(가똥)</b><br><span class="card-sub">지금 보고 있는 종목·분기 데이터로만 답해요</span></div>')
             if not ok:
                 st.info(why)
                 return
@@ -137,7 +137,7 @@ def copilot(rep: service.Report | None) -> None:
                 q = st.text_input("질문", placeholder="예: 이번 분기 영업이익이 컨센을 이긴 이유는?", label_visibility="collapsed")
                 sent = st.form_submit_button("질문하기", type="primary", width="stretch")
             if sent and q.strip() and rep is not None:
-                with st.spinner("Lens가 생각 중…"):
+                with st.spinner("가똥이 생각 중…"):
                     try:
                         answer = ai.ask(q.strip()[:1000], context_for(rep))
                     except ai.AIError as e:

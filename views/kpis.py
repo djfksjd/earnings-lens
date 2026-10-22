@@ -3,11 +3,11 @@ from __future__ import annotations
 
 import streamlit as st
 
-from earnings_lens import manual
-from earnings_lens.analysis.metrics import pct_change
-from earnings_lens.security import esc
-from earnings_lens.ui import components as c
-from earnings_lens.ui import fmt
+from gaddong import manual
+from gaddong.analysis.metrics import pct_change
+from gaddong.security import esc
+from gaddong.ui import components as c
+from gaddong.ui import fmt
 from views import _common as k
 
 

@@ -7,10 +7,10 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from earnings_lens import ai, config, manual, security
-from earnings_lens.analysis import metrics, reaction
-from earnings_lens.providers import alphavantage, dart, sec
-from earnings_lens.ui import components, fmt
+from gaddong import ai, config, manual, security
+from gaddong.analysis import metrics, reaction
+from gaddong.providers import alphavantage, dart, sec
+from gaddong.ui import components, fmt
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -165,13 +165,13 @@ def test_components_avoid_svg_which_streamlit_sanitizer_strips():
 
 
 def test_segment_total_row_detected():
-    from earnings_lens.manual import is_total_row
+    from gaddong.manual import is_total_row
     assert is_total_row("전사 합계(GAAP)") and is_total_row("Total") and is_total_row("총계")
     assert not is_total_row("Data Center") and not is_total_row("메모리") and not is_total_row(None)
 
 
 def test_combined_ai_keeps_both_guidance_lists(tmp_path, monkeypatch):
-    from earnings_lens import config, manual
+    from gaddong import config, manual
     monkeypatch.setattr(config, "AI_DIR", tmp_path)
     manual.save_ai("005930.KS", "2026-06", "call", {"guidance": [{"metric": "call"}], "tone": {"label": "긍정"}})
     manual.save_ai("005930.KS", "2026-06", "release", {"guidance": [{"metric": "release"}], "segments": [{"name": "DS"}]})
@@ -181,7 +181,7 @@ def test_combined_ai_keeps_both_guidance_lists(tmp_path, monkeypatch):
 
 
 def test_money_unit_uses_korean_units_for_krw():
-    from earnings_lens.ui.components import money_unit
+    from gaddong.ui.components import money_unit
     assert money_unit([1.7e14, None], "KRW") == (1e12, "조")
     assert money_unit([3e11], "KRW") == (1e8, "억")
     assert money_unit([9.6e10], "USD") == (1e9, "B")
@@ -189,8 +189,8 @@ def test_money_unit_uses_korean_units_for_krw():
 
 
 def test_readable_amounts_round_trip():
-    from earnings_lens.manual import parse_amount, readable_amounts
-    from earnings_lens.ui import fmt
+    from gaddong.manual import parse_amount, readable_amounts
+    from gaddong.ui import fmt
     out = readable_amounts({"segments": [{"name": "DS", "revenue": 95e12, "note": "x"}], "kpis": [{"value": 40}]},
                            lambda v: fmt.money(v, "KRW"))
     assert out["segments"][0]["revenue"] == "95.00조" and parse_amount(out["segments"][0]["revenue"]) == 95e12

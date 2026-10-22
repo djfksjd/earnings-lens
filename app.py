@@ -1,12 +1,12 @@
-"""Earnings Lens — 실행: streamlit run app.py  (주소 고정: http://127.0.0.1:8765)"""
+"""Gaddong(가똥) — 실행: streamlit run app.py  (주소 고정: http://127.0.0.1:8765)"""
 from __future__ import annotations
 
 import streamlit as st
 
-st.set_page_config(page_title="Earnings Lens", page_icon=":material/donut_large:", layout="wide",
+st.set_page_config(page_title="Gaddong(가똥)", page_icon=":material/donut_large:", layout="wide",
                    initial_sidebar_state="collapsed")
 
-from earnings_lens.ui import components, shell  # noqa: E402  set_page_config가 먼저 와야 한다
+from gaddong.ui import components, shell  # noqa: E402  set_page_config가 먼저 와야 한다
 from views import call, financials, inputs, kpis, outlook, overview, reaction, segments, settings  # noqa: E402
 
 MAIN = [

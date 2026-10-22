@@ -1,5 +1,5 @@
 ---
-name: Earnings Lens
+name: Gaddong
 description: An earnings desk where every headline number states its verdict against the street.
 colors:
   desk-ground: "#F3F4F8"
@@ -153,7 +153,7 @@ components:
     height: "48px"
 ---
 
-# Design System: Earnings Lens
+# Design System: Gaddong
 
 ## Overview
 
@@ -231,7 +231,7 @@ A fixed left icon rail (72px including its 12px inset) and a content column capp
 
 Pages compose as bento rows of Streamlit columns: headline banner, then a row of four stat cards, then a 2 : 1 : 1 bento. Cards in a bento row stretch so bottoms align. Card internal rhythm is 6 / 10 / 12 / 14 / 18px.
 
-Mobile (max-width 760px): the rail becomes a 60px bottom bar inset 10px with logo and separator hidden; content padding drops to 1rem (9rem bottom); stat cards wrap 2x2 with deltas stacked and source badges hidden; the headline banner keeps the orb at 48px and drops its subline; the top bar wraps with selects at 50% each; card padding becomes 14px; Ask Lens collapses to a 48px icon circle 84px above the bottom.
+Mobile (max-width 760px): the rail becomes a 60px bottom bar inset 10px with logo and separator hidden; content padding drops to 1rem (9rem bottom); stat cards wrap 2x2 with deltas stacked and source badges hidden; the headline banner keeps the orb at 48px and drops its subline; the top bar wraps with selects at 50% each; card padding becomes 14px; Ask Gaddong collapses to a 48px icon circle 84px above the bottom.
 
 ## Elevation & Depth
 
@@ -240,7 +240,7 @@ Hybrid: glass layering plus soft ambient shadows. Surfaces sit on the desk via b
 ### Shadow Vocabulary
 - **Rest** (`box-shadow: 0 1px 2px rgba(18, 20, 26, .04), 0 8px 24px -12px rgba(18, 20, 26, .14)`): cards, rail, top bar.
 - **Lift** (`box-shadow: 0 2px 4px rgba(18, 20, 26, .05), 0 18px 36px -16px rgba(40, 52, 140, .26)`): card hover, popover.
-- **Copilot glow** (`box-shadow: 0 14px 34px -14px rgba(40, 52, 140, .6)`; hover `0 20px 40px -16px rgba(40, 52, 140, .7)`): the floating Ask Lens pill only.
+- **Copilot glow** (`box-shadow: 0 14px 34px -14px rgba(40, 52, 140, .6)`; hover `0 20px 40px -16px rgba(40, 52, 140, .7)`): the floating Ask Gaddong pill only.
 
 ### Named Rules
 **The Soft Offset Rule.** Shadows are always blurred and negatively spread. No hard offset shadows. (The logo mark's `6px 6px 0` ring is how the mark is drawn, not elevation.)
@@ -291,7 +291,7 @@ A circle with a radial gradient on one hue `--h`, inset shading and a hue-matche
 ### Price Pill
 White pill: price (700, 1.05rem), change in beat/miss colour, then source and delay as a .72rem caption with a 7px live dot (green with a 2.2s pulse when real-time, amber and static when delayed).
 
-### Ask Lens (floating copilot)
+### Ask Gaddong (floating copilot)
 Fixed bottom-right ink-glass pill (90% ink, 14px blur, white 12% border, copilot glow) that raises 3px on hover. It opens a 20px-radius popover with a small orb header. Chat bubbles are 14px radius: user on periwinkle-soft, AI on 4% ink.
 
 ### Tables

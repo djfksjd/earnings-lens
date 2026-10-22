@@ -5,11 +5,11 @@ from urllib.parse import quote
 
 import streamlit as st
 
-from earnings_lens import manual, service
-from earnings_lens.analysis import metrics
-from earnings_lens.security import esc
-from earnings_lens.ui import components as c
-from earnings_lens.ui import fmt
+from gaddong import manual, service
+from gaddong.analysis import metrics
+from gaddong.security import esc
+from gaddong.ui import components as c
+from gaddong.ui import fmt
 
 HEADLINE = ("revenue", "operating_income", "ebitda", "eps")
 

@@ -6,8 +6,8 @@ from datetime import date
 import pandas as pd
 import pytest
 
-from earnings_lens.analysis import reaction
-from earnings_lens.providers import dart, fool, krx, marketbeat, xbrl
+from gaddong.analysis import reaction
+from gaddong.providers import dart, fool, krx, marketbeat, xbrl
 
 _HEAD = ('<xbrl xmlns="http://www.xbrl.org/2003/instance" xmlns:xbrldi="http://xbrl.org/2006/xbrldi" '
          'xmlns:us-gaap="http://fasb.org/us-gaap" xmlns:co="http://co">')
@@ -169,7 +169,7 @@ def test_fool_parse_and_find_url():
 
 
 def test_mascot_payload_cannot_break_out_of_script(monkeypatch):
-    from earnings_lens.ui import mascot
+    from gaddong.ui import mascot
     seen = {}
     monkeypatch.setattr(mascot.components, "html", lambda html, height: seen.update(html=html, height=height))
     mascot.render("happy", label="</script><img src=x onerror=alert(1)>", height=90)

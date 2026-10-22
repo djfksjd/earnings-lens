@@ -3,9 +3,9 @@ from __future__ import annotations
 
 import streamlit as st
 
-from earnings_lens import ai, config
-from earnings_lens.security import esc, mask
-from earnings_lens.ui import components as c
+from gaddong import ai, config
+from gaddong.security import esc, mask
+from gaddong.ui import components as c
 
 
 def render() -> None:

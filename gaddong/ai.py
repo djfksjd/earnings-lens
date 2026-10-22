@@ -96,7 +96,7 @@ def run(prompt: str, schema: dict | None = None, model: str | None = None) -> di
            "--no-session-persistence", "--output-format", "json", "--model", model or config.CLAUDE_MODEL]
     if schema:
         cmd += ["--json-schema", json.dumps(schema, ensure_ascii=False)]
-    with tempfile.TemporaryDirectory(prefix="earnings-lens-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="gaddong-") as tmp:
         try:
             proc = subprocess.run(cmd, input=prompt[:MAX_INPUT_CHARS + 4000], capture_output=True, text=True,
                                   timeout=TIMEOUT, cwd=tmp, env=_env(), check=False)
@@ -150,7 +150,7 @@ def analyze_release(company: str, period_label: str, text: str) -> dict:
 
 
 def ask(question: str, context: dict) -> str:
-    prompt = f"""너는 'Lens'라는 실적 리서치 어시스턴트다. 아래 <context>의 데이터만 근거로 한국어로 간결하게 답한다.
+    prompt = f"""너는 'Gaddong(가똥)'이라는 실적 리서치 어시스턴트다. 아래 <context>의 데이터만 근거로 한국어로 간결하게 답한다.
 데이터에 없으면 없다고 말하고, 투자 권유는 하지 않는다. 숫자를 말할 때는 출처(자동/내 입력/AI)를 밝힌다.
 {_RULES}
 <document>
