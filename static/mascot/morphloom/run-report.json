@@ -1,0 +1,210 @@
+{
+  "schema": "morphloom.job-result/0.1",
+  "jobId": "lens-orb-mascot",
+  "target": "review",
+  "assemblyFingerprint": "786af04b1ec842fc388b843e2f2b90a25af54ca9121fb63fe586e92ea26b9f59",
+  "sourceAudit": {
+    "schema": "morphloom.source-audit/0.1",
+    "pass": true,
+    "receipts": [
+      {
+        "viewId": "view_01",
+        "path": "work/lens-orb/sources/dashboard-orb.png",
+        "sha256": "78c7ed26e670dc37a9c9912a331fc633ee22c9956dc2c392a7f14eea19d5b9eb",
+        "bytes": 39443,
+        "mimeType": "image/png",
+        "width": 420,
+        "height": 420
+      },
+      {
+        "viewId": "view_02",
+        "path": "work/lens-orb/sources/design-spec.png",
+        "sha256": "7f2cd2427ccba53abf0610eadc75a296eda2539005e229d4fb756a77ba0a74dd",
+        "bytes": 14184,
+        "mimeType": "image/png",
+        "width": 760,
+        "height": 360
+      }
+    ],
+    "blockers": []
+  },
+  "evidenceAudit": {
+    "schema": "morphloom.evidence-claim-audit/0.1",
+    "pass": true,
+    "blockers": [],
+    "warnings": [],
+    "checkedComponents": 11,
+    "checkedDimensions": 4,
+    "recomputedReadiness": {
+      "target": "semi-professional-editable",
+      "profile": "product-visualization",
+      "buildReady": true,
+      "deliveryReady": true,
+      "score": 97,
+      "recommendedRoles": [
+        "front",
+        "rear",
+        "left",
+        "right",
+        "top",
+        "bottom",
+        "measurement",
+        "material"
+      ],
+      "presentRecommendedRoles": [
+        "front",
+        "left",
+        "right",
+        "measurement",
+        "material"
+      ],
+      "missingRecommendedRoles": [
+        "rear",
+        "top",
+        "bottom"
+      ],
+      "requiredCapabilities": [
+        "shape",
+        "depth",
+        "scale",
+        "surface",
+        "interfaces"
+      ],
+      "resolvedCapabilities": [
+        "shape",
+        "depth",
+        "scale",
+        "surface",
+        "interfaces"
+      ],
+      "unresolvedCapabilities": [],
+      "strongDimensionProperties": [
+        "body_diameter",
+        "eye_height",
+        "eye_spacing",
+        "hand_diameter"
+      ],
+      "calibratedViews": [
+        "view_02"
+      ],
+      "identifiedComponentIds": [],
+      "sourceAuditReady": true,
+      "sourceAuditIssues": [],
+      "conflicts": [],
+      "blockers": [],
+      "warnings": [],
+      "nextActions": [
+        "근거 팩을 잠그고 동일 시점 비교·토폴로지·표면·내보내기 게이트 실행"
+      ]
+    }
+  },
+  "route": {
+    "schema": "morphloom.modeling-route/0.1",
+    "request": "Earnings Lens 대시보드의 오브 캐릭터를 상황별로 움직이는 귀여운 3D 캐릭터 에이전트로 모델링 (몸체·눈·손·볼터치·소품을 편집 단위로 분리, 런타임 애니메이션용)",
+    "domains": [
+      "human",
+      "animation"
+    ],
+    "buildAllowed": true,
+    "deliveryAllowed": true,
+    "stages": [
+      {
+        "id": "evidence",
+        "tools": [
+          "evidence-readiness"
+        ],
+        "reason": "Resolve capabilities from drawings, measurements, scans, datasheets, or photographs without imposing a fixed photo count.",
+        "blocking": false
+      },
+      {
+        "id": "reconstruction",
+        "tools": [
+          "camera-calibration",
+          "semantic-part-decomposition",
+          "visual-plan-audit",
+          "pose-landmarks",
+          "thin-feature-reconstruction",
+          "implicit-surface",
+          "surface-reconstruction",
+          "pbr-reference-audit",
+          "humanoid-rig",
+          "animation-delivery"
+        ],
+        "reason": "Compile the evidence-supported human+animation representation into editable geometry and material systems.",
+        "blocking": false
+      },
+      {
+        "id": "verification",
+        "tools": [
+          "visual-plan-audit",
+          "part-inventory-audit",
+          "topology-audit",
+          "visual-comparison",
+          "glb-roundtrip",
+          "native-reopen"
+        ],
+        "reason": "Verify geometry, calibrated-view likeness, delivered bytes, and the target application before release.",
+        "blocking": true
+      }
+    ],
+    "blockers": []
+  },
+  "detailAudit": {
+    "pass": false,
+    "modelPass": false,
+    "modelBlockers": [
+      "locked fidelity contract is required",
+      "evidence-first part decomposition contract is required"
+    ],
+    "blockers": [
+      "locked fidelity contract is required",
+      "evidence-first part decomposition contract is required"
+    ],
+    "warnings": [],
+    "evidenceCoverage": 1,
+    "explicitSurfaceCoverage": 1,
+    "microSurfaceCoverage": 1,
+    "semanticDetailCoverage": 1,
+    "finiteTransformCoverage": 1,
+    "duplicateComponentIds": [],
+    "fidelityBlockers": [],
+    "fidelityWarnings": [],
+    "partDecompositionBlockers": [],
+    "partDecompositionWarnings": [],
+    "visualPlanBlockers": [],
+    "visualPlanWarnings": []
+  },
+  "patchReceipts": [],
+  "releaseAllowed": false,
+  "blockers": [],
+  "status": "review-pass",
+  "glbSha256": "4bf00b9de9815fc85c54b63be31ffe502eb5c55fa685b73019f2cab971a14614",
+  "repeatGlbSha256": "4bf00b9de9815fc85c54b63be31ffe502eb5c55fa685b73019f2cab971a14614",
+  "byteDeterministic": true,
+  "validation": {
+    "status": "pass",
+    "validator": "Khronos glTF Validator",
+    "validatorVersion": "2.0.0-dev.3.10",
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0,
+    "hints": 0,
+    "truncated": false,
+    "issueCodes": [],
+    "independentRead": {
+      "status": "pass",
+      "parser": "glTF Transform WebIO",
+      "nodes": 12,
+      "meshes": 11,
+      "materials": 11,
+      "skins": 0,
+      "animations": 0
+    }
+  },
+  "metrics": {
+    "parts": 11,
+    "triangles": 31044,
+    "vertices": 34388,
+    "bytes": 1972948
+  }
+}
