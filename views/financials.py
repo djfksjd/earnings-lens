@@ -37,18 +37,20 @@ def render() -> None:
     with left, st.container(key="card_trend"):
         df = r.fin.tail(8)
         labels = [service.period_label(p, r.profile.fy_end_month) for p in df.index]
+        div, unit = c.money_unit(list(df["revenue"]) + list(df["operating_income"]), cur)
         fig = go.Figure()
-        fig.add_bar(x=labels, y=df["revenue"], name="매출액", marker_color="#C9D0FB",
-                    marker_line_width=0, hovertemplate="%{x}<br>매출 %{y:,.0f}<extra></extra>")
-        fig.add_bar(x=labels, y=df["operating_income"], name="영업이익", marker_color=c.ACCENT,
-                    marker_line_width=0, hovertemplate="%{x}<br>영업이익 %{y:,.0f}<extra></extra>")
+        fig.add_bar(x=labels, y=df["revenue"] / div, name="매출액", marker_color="#C9D0FB",
+                    marker_line_width=0, hovertemplate=f"%{{x}}<br>매출 %{{y:,.2f}}{unit}<extra></extra>")
+        fig.add_bar(x=labels, y=df["operating_income"] / div, name="영업이익", marker_color=c.ACCENT,
+                    marker_line_width=0, hovertemplate=f"%{{x}}<br>영업이익 %{{y:,.2f}}{unit}<extra></extra>")
+        fig.update_yaxes(ticksuffix=unit, tickformat=",.0f")
         margin = (df["operating_income"] / df["revenue"] * 100).where(df["revenue"] > 0)
         fig.add_scatter(x=labels, y=margin, name="영업이익률(%)", yaxis="y2", mode="lines+markers",
                         line=dict(color=c.INK, width=2), marker=dict(size=7))
-        fig.update_layout(barmode="group", yaxis2=dict(overlaying="y", side="right", showgrid=False, ticksuffix="%"))
+        fig.update_layout(barmode="group", yaxis2=dict(overlaying="y", side="right", showgrid=False, ticksuffix="%", tickformat=".0f"))
         c.plot_layout(fig, 330)
         c.show(c.card_head("분기 추이", sub="막대: 매출·영업이익, 선: 영업이익률"))
-        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
     with right, st.container(key="card_eps"):
         eh = service.get_eps_history(r.ticker)
         c.show(c.card_head("EPS 서프라이즈 이력", sub="실제 vs 컨센서스(%)", source="자동 · yfinance"))
@@ -64,7 +66,7 @@ def render() -> None:
                                    hovertemplate="%{x}<br>%{y:.1f}%<extra></extra>"))
             fig.update_yaxes(ticksuffix="%")
             c.plot_layout(fig, 330)
-            st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+            st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
 
     with st.expander("원본 분기 데이터"):
-        st.dataframe(r.fin.sort_index(ascending=False), use_container_width=True)
+        st.dataframe(r.fin.sort_index(ascending=False), width="stretch")

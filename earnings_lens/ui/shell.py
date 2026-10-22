@@ -4,7 +4,7 @@ from __future__ import annotations
 import streamlit as st
 
 from .. import ai, config, manual, service
-from ..security import clean_ticker, esc
+from ..security import clean_period, clean_ticker, esc
 from . import components as c
 from . import fmt
 
@@ -14,7 +14,7 @@ LOGO = '<div class="rail-logo" title="Earnings Lens" aria-label="Earnings Lens">
 def rail(pages: list[st.Page], bottom: list[st.Page], current: st.Page) -> None:
     def link(p: st.Page) -> None:
         with st.container(key=f"nav_{p.url_path or 'home'}"):
-            st.page_link(p, label=p.title, icon=p.icon, help=p.title)
+            st.page_link(p, label=p.title, icon=p.icon)
 
     with st.container(key="rail"):
         st.html(LOGO)
@@ -35,12 +35,19 @@ def _on_ticker_change():
         t = clean_ticker(raw)
     except ValueError as e:
         st.session_state["_ticker_error"] = str(e)
+        st.session_state["_ticker_box"] = st.session_state.get("ticker")  # 잘못된 입력은 상자에 남기지 않는다
+        return
+    fin, _, _ = service.get_financials(t)
+    if fin.empty:
+        st.session_state["_ticker_error"] = f"'{t}'의 분기 실적을 찾지 못했어요. 티커를 확인하세요(한국은 .KS / .KQ)."
+        st.session_state["_ticker_box"] = st.session_state.get("ticker")
         return
     st.session_state.pop("_ticker_error", None)
     wl = manual.watchlist()
     if t not in wl:
         manual.save_watchlist(wl + [t])
     st.session_state["ticker"] = t
+    st.session_state["_ticker_box"] = t  # '005930' 입력 → 상자에도 정규화된 '005930.KS'
     st.query_params["t"] = t
 
 
@@ -54,6 +61,12 @@ def topbar() -> service.Report | None:
             st.session_state["ticker"] = wl[0]
     st.query_params["t"] = st.session_state["ticker"]
     ticker = st.session_state["ticker"]
+    if (p := st.query_params.get("p")) and f"period_{ticker}" not in st.session_state:
+        try:  # 링크(?p=2026-06)로 열면 그 분기부터 보여준다
+            st.session_state[f"period_{ticker}"] = clean_period(p)
+        except ValueError:
+            pass
+    st.query_params.pop("p", None)
     options = wl if ticker in wl else [ticker] + wl
 
     with st.container(key="topbar"):
@@ -69,14 +82,19 @@ def topbar() -> service.Report | None:
             st.html(f'<div class="co-title"><b>{esc(rep.profile.name)}</b><span>{esc(ticker)}'
                     f'{(" · " + esc(sector)) if sector else ""}</span></div>')
         with cols[2]:
-            periods = list(reversed(rep.fin.index.tolist()))
+            # 매출·영업이익이 모두 비어 있는 분기(데이터 공급 초기 분기)는 목록에서 뺀다
+            core = [m for m in ("revenue", "operating_income") if m in rep.fin.columns]
+            filled = rep.fin.dropna(subset=core, how="all") if core else rep.fin
+            periods = list(reversed(filled.index.tolist())) or list(reversed(rep.fin.index.tolist()))
+            if rep.period not in periods:
+                periods.insert(0, rep.period)
             if periods:
                 st.selectbox("분기", periods, index=periods.index(rep.period) if rep.period in periods else 0,
                              key=f"period_{ticker}", format_func=lambda p: f"{service.period_label(p, rep.profile.fy_end_month)} · {p}")
         with cols[3]:
             price_pill(ticker)
-    if st.session_state.get("_ticker_error"):
-        st.warning(st.session_state["_ticker_error"])
+    if err := st.session_state.pop("_ticker_error", None):  # 한 번만 보여주고 다음 화면에서는 지운다
+        st.warning(err)
     for w in rep.warnings:
         st.caption(f":material/warning: {w}")
     return rep
@@ -114,7 +132,7 @@ def copilot(rep: service.Report | None) -> None:
                         st.markdown(msg)  # 마크다운만 허용, HTML은 렌더링하지 않는다
             with st.form("ask", clear_on_submit=True, border=False):
                 q = st.text_input("질문", placeholder="예: 이번 분기 영업이익이 컨센을 이긴 이유는?", label_visibility="collapsed")
-                sent = st.form_submit_button("질문하기", type="primary", use_container_width=True)
+                sent = st.form_submit_button("질문하기", type="primary", width="stretch")
             if sent and q.strip() and rep is not None:
                 with st.spinner("Lens가 생각 중…"):
                     try:

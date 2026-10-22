@@ -44,20 +44,25 @@ def render() -> None:
     left, right = st.columns(2)
     names = [s.get("name", "") for s in segs]
     with left, st.container(key="card_seg_rev"):
+        series = [("전년동기", "revenue_prev_y", "#DDE1F6"), ("전분기", "revenue_prev_q", "#A9B4F6"), ("당분기", "revenue", c.ACCENT)]
+        div, unit = c.money_unit([manual.parse_amount(s.get(key)) for _, key, _ in series for s in segs], cur)
         fig = go.Figure()
-        for label, key, color in (("전년동기", "revenue_prev_y", "#DDE1F6"), ("전분기", "revenue_prev_q", "#A9B4F6"), ("당분기", "revenue", c.ACCENT)):
-            fig.add_bar(x=names, y=[manual.parse_amount(s.get(key)) for s in segs], name=label, marker_color=color, marker_line_width=0)
+        for label, key, color in series:
+            ys = [(v / div if v is not None else None) for v in (manual.parse_amount(s.get(key)) for s in segs)]
+            fig.add_bar(x=names, y=ys, name=label, marker_color=color, marker_line_width=0,
+                        hovertemplate=f"%{{x}}<br>{label} %{{y:,.2f}}{unit}<extra></extra>")
         fig.update_layout(barmode="group")
+        fig.update_yaxes(ticksuffix=unit, tickformat=",.0f")
         c.plot_layout(fig, 320)
         c.show(c.card_head("부문 매출 비교"))
-        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
     with right, st.container(key="card_seg_mix"):
         vals = [manual.parse_amount(s.get("revenue")) or 0 for s in segs]
         fig = go.Figure(go.Pie(labels=names, values=vals, hole=.62, marker=dict(colors=c.SERIES, line=dict(color="#fff", width=2)),
                                textinfo="percent", sort=False))
         c.plot_layout(fig, 320)
         c.show(c.card_head("매출 구성"))
-        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
     notes = [s for s in segs if s.get("note")]
     if notes:
         c.show(c.card("부문 코멘트", k.bullet_rows([(f'<span class="pill">{c.esc(s.get("name", ""))}</span>', s["note"]) for s in notes]), i=3))

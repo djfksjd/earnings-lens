@@ -12,6 +12,7 @@ from earnings_lens.providers import alphavantage, sec
 from earnings_lens.providers.http import ProviderError
 from earnings_lens.security import esc
 from earnings_lens.ui import components as c
+from earnings_lens.ui import fmt
 from views import _common as k
 
 
@@ -66,7 +67,7 @@ def results(r: service.Report, turns: list[dict]) -> None:
         if quotes:
             html = '<div class="list">' + "".join(
                 f'<div class="quote">“{esc(q.get("text", ""))}”<cite>{esc(q.get("speaker", ""))}'
-                f'{(" · " + esc(q["role"])) if q.get("role") else ""}</cite>'
+                f'{(" · " + esc(q["role"])) if q.get("role") and q.get("role") != q.get("speaker") else ""}</cite>'
                 + (f'<div class="why">{esc(q["why"])}</div>' if q.get("why") else "") + "</div>" for q in quotes) + "</div>"
             c.show(c.card("CEO · CFO 핵심 발언", html, i=2, source=k.section_source(r, "quotes")))
             st.write("")
@@ -93,7 +94,7 @@ def sources_panel(r: service.Report, text: str | None, src: str) -> None:
             if st.button("Alpha Vantage에서 가져오기", disabled=disabled, help="무료 하루 25회. 받은 원문은 저장돼 다시 호출하지 않아요."):
                 try:
                     alphavantage.transcript(r.ticker, fq)
-                    st.success("가져왔어요. 저장된 원문으로 분석할 수 있어요.")
+                    st.toast("가져왔어요. 저장된 원문으로 분석할 수 있어요.", icon=":material/check:")
                     st.rerun()
                 except (ProviderError, ValueError) as e:
                     st.error(str(e))
@@ -102,10 +103,14 @@ def sources_panel(r: service.Report, text: str | None, src: str) -> None:
         else:
             st.caption("한국 기업 컨콜 원문은 무료 API가 없어요. IR 페이지의 녹취록·발표 요지를 붙여넣으세요.")
         pasted = st.text_area("원문 붙여넣기", height=160, placeholder="컨콜 녹취록이나 발표 요지를 붙여넣고 저장하세요.")
-        if st.button("붙여넣은 원문 저장", disabled=not pasted.strip()):
-            p = manual.save_transcript(r.ticker, r.period, pasted)
-            st.success(f"저장: {p.relative_to(config.ROOT)}")
-            st.rerun()
+        # 버튼을 글 유무로 비활성화하면 붙여넣은 직후 첫 클릭이 '글 확정'에만 쓰인다. 누른 뒤 검사한다.
+        if st.button("붙여넣은 원문 저장"):
+            if pasted.strip():
+                p = manual.save_transcript(r.ticker, r.period, pasted)
+                st.toast(f"저장: {p.relative_to(config.ROOT)}", icon=":material/check:")
+                st.rerun()
+            else:
+                st.warning("붙여넣은 원문이 없어요.")
         if text:
             with st.expander(f"원문 미리보기 ({len(text):,}자)"):
                 st.text(text[:4000] + ("\n…" if len(text) > 4000 else ""))
@@ -115,7 +120,7 @@ def sources_panel(r: service.Report, text: str | None, src: str) -> None:
                 try:
                     out = ai.analyze_call(r.profile.name, k.plabel(r), text or "", last)
                     manual.save_ai(r.ticker, r.period, "call", out)
-                    st.success("분석을 저장했어요.")
+                    st.toast("분석을 저장했어요. 분석 결과 탭에서 보세요.", icon=":material/check:")
                     st.rerun()
                 except ai.AIError as e:
                     st.error(str(e))
@@ -141,14 +146,17 @@ def sources_panel(r: service.Report, text: str | None, src: str) -> None:
                     except ProviderError as e:
                         st.error(str(e))
         ir_text = st.text_area("IR 자료 텍스트 붙여넣기", height=140, placeholder="한국 기업은 IR 발표자료 PDF의 텍스트를 붙여넣으세요.")
-        if st.button("붙여넣은 자료로 AI 추출", disabled=not (ok and ir_text.strip())):
-            doc_text = ir_text
+        if st.button("붙여넣은 자료로 AI 추출", disabled=not ok):
+            if ir_text.strip():
+                doc_text = ir_text
+            else:
+                st.warning("IR 자료 텍스트를 먼저 붙여넣으세요.")
         if doc_text:
             with st.spinner("Claude가 보도자료를 읽는 중…"):
                 try:
                     out = ai.analyze_release(r.profile.name, k.plabel(r), doc_text)
                     manual.save_ai(r.ticker, r.period, "release", out)
-                    st.success(f"추출 완료: {out.get('headline', '')}")
+                    st.toast(f"추출 완료: {out.get('headline', '')}", icon=":material/check:")
                     st.rerun()
                 except ai.AIError as e:
                     st.error(str(e))
@@ -160,9 +168,10 @@ def sources_panel(r: service.Report, text: str | None, src: str) -> None:
         if st.button("AI 결과를 내 입력으로 저장", disabled=not (manual.load_ai(r.ticker, r.period, "call") or manual.load_ai(r.ticker, r.period, "release"))):
             mine, src_label = manual.load_inputs(r.ticker, r.period)
             mine = dict(mine) if src_label == "내 입력" else {}
-            for kind in ("call", "release"):
-                for sec_name, val in manual.load_ai(r.ticker, r.period, kind).items():
-                    if sec_name in manual.SECTIONS and not mine.get(sec_name):
-                        mine[sec_name] = val
+            for sec_name, val in manual.combined_ai(r.ticker, r.period).items():
+                if sec_name in manual.SECTIONS and not mine.get(sec_name):
+                    mine[sec_name] = val
+            mine = manual.readable_amounts(mine, lambda v: fmt.money(v, r.profile.currency))
             p = manual.save_inputs(r.ticker, r.period, mine)
-            st.success(f"저장: {p.relative_to(config.ROOT)} — 입력 관리에서 수정하세요.")
+            st.toast(f"저장: {p.relative_to(config.ROOT)} — 입력 관리에서 수정하세요.", icon=":material/check:")
+            st.rerun()

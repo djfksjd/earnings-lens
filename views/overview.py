@@ -66,7 +66,7 @@ def reaction_card(r: service.Report) -> None:
         stats, sub = "", "발표일 이후 데이터가 아직 없어요"
     with st.container(key="card_reaction"):
         c.show(c.card_head("주가 반응", sub=sub, source="자동 · yfinance") + stats)
-        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
 
 
 def tone_card(r: service.Report) -> None:

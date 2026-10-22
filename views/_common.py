@@ -1,6 +1,8 @@
 """화면 공용 도우미."""
 from __future__ import annotations
 
+from urllib.parse import quote
+
 import streamlit as st
 
 from earnings_lens import manual, service
@@ -39,7 +41,8 @@ def stat_cards(r: service.Report, offset: int = 0) -> None:
         f = value_fmt(r, m)
         val = row["value"] if row is not None else None
         strip = c.consensus_strip(r.actuals.get(m, val), cons.value if cons else None, cons.low if cons else None,
-                                  cons.high if cons else None, v, f)
+                                  cons.high if cons else None, v, f,
+                                  link=f"./inputs?t={quote(r.ticker)}&p={quote(r.period)}")  # 새로 열려도 같은 종목·분기
         src = r.fin_src.get(m, "")
         with cols[i]:
             c.show(c.stat_card(metrics.LABELS[m], f(val), row["qoq"] if row is not None else None,

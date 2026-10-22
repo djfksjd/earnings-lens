@@ -120,7 +120,7 @@ def run(prompt: str, schema: dict | None = None, model: str | None = None) -> di
 
 
 def analyze_call(company: str, period_label: str, transcript: str, last_summary: str | None) -> dict:
-    prev = f"\n전분기 컨콜 요약(톤 비교용):\n{last_summary}\n" if last_summary else "\n전분기 요약 없음: vs_last는 '비교불가'.\n"
+    prev = f"\n전분기 컨콜 요약(톤 비교용):\n{last_summary}\n" if last_summary else "\n전분기 요약 없음: vs_last는 '비교불가'. changes에는 '비교 불가' 같은 문장을 넣지 말고 이번 분기에 새로 강조된 점만 쓴다.\n"
     prompt = f"""너는 실적 시즌을 다루는 셀사이드 애널리스트다. {company} {period_label} 실적 컨퍼런스콜을 분석한다.
 {_RULES}
 작성할 것:

@@ -144,13 +144,23 @@ def save_ai(ticker: str, period: str, kind: str, data: dict) -> None:
     ai_path(ticker, period, kind).write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+def combined_ai(ticker: str, period: str) -> dict:
+    """보도자료·컨콜 AI 결과를 합친다. 목록 항목(가이던스·체크포인트 등)은 둘 다 살리고
+    보도자료(공식 숫자)를 앞에 둔다. 한쪽만 쓰면 다른 쪽 가이던스가 조용히 사라진다."""
+    ai: dict = {}
+    for kind in ("release", "call"):
+        for k, v in load_ai(ticker, period, kind).items():
+            if isinstance(v, list) and isinstance(ai.get(k), list):
+                ai[k] = ai[k] + v
+            else:
+                ai.setdefault(k, v)
+    return ai
+
+
 def merged(ticker: str, period: str) -> dict:
     """섹션별로 내 입력 > AI 결과. 각 섹션에 출처 라벨을 붙인다."""
     mine, mine_src = load_inputs(ticker, period)
-    ai: dict = {}
-    for kind in ("call", "release"):
-        for k, v in load_ai(ticker, period, kind).items():
-            ai.setdefault(k, v)
+    ai = combined_ai(ticker, period)
     out: dict = {"_source": {}}
     for sec in SECTIONS:
         if mine.get(sec):
@@ -158,3 +168,22 @@ def merged(ticker: str, period: str) -> dict:
         elif ai.get(sec):
             out[sec], out["_source"][sec] = ai[sec], "AI 추출"
     return out
+
+
+_MONEY_KEYS = re.compile(r"^(revenue|operating_income|ebitda|net_income)(_prev_[qy]|_low|_high)?$")
+
+
+def readable_amounts(data: dict, money) -> dict:
+    """확정 파일을 사람이 고치기 쉽게: 세그먼트·컨센서스의 금액을 '95.00조', '$89.00B'로 바꾼다.
+    money(value) -> str. parse_amount가 다시 숫자로 읽으므로 계산은 그대로다."""
+    def conv(d: dict) -> dict:
+        return {k: (money(v) if _MONEY_KEYS.match(k) and isinstance(v, (int, float)) and not isinstance(v, bool) else v)
+                for k, v in d.items()}
+    out = dict(data)
+    if isinstance(out.get("segments"), list):
+        out["segments"] = [conv(x) if isinstance(x, dict) else x for x in out["segments"]]
+    for sec in ("consensus", "actual_override"):
+        if isinstance(out.get(sec), dict):
+            out[sec] = conv(out[sec])
+    return out
+

@@ -310,7 +310,17 @@ def price_reaction(rep: Report) -> tuple[dict | None, pd.DataFrame, pd.DataFrame
     b = get_history(benchmark(rep.ticker), start)
     if rep.event is None or h.empty:
         return None, h, b
-    return reaction.compute(h, rep.event, b), h, b
+    rx = reaction.compute(h, rep.event, b)
+    # 지난 분기를 볼 때 차트가 오늘까지 늘어나 발표 시점이 왼쪽 끝에 몰리지 않게 발표 후 120일까지만 보여준다
+    end = (rep.event.tz_convert(None) if rep.event.tzinfo else rep.event) + pd.Timedelta(days=120)
+    return rx, _until(h, end), _until(b, end)
+
+
+def _until(df: pd.DataFrame, end: pd.Timestamp) -> pd.DataFrame:
+    if df.empty:
+        return df
+    idx = df.index.tz_convert(None) if df.index.tz is not None else df.index
+    return df[idx <= end]
 
 
 def reaction_history(ticker: str) -> pd.DataFrame:

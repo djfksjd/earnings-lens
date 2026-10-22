@@ -30,7 +30,8 @@ def render() -> None:
         if st.button("연결 테스트", disabled=not ok):
             with st.spinner("Claude 호출 중…"):
                 try:
-                    st.success(ai.run("한 단어로만 답해: 연결됨"))
+                    reply = ai.run("'OK' 두 글자만 출력해.")
+                    st.success(f"연결됨 · Claude 응답: {reply.strip()[:40]}")
                 except ai.AIError as e:
                     st.error(str(e))
     with right, st.container(key="card_security"):

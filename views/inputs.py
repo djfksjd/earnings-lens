@@ -41,7 +41,13 @@ def render() -> None:
             path = manual.input_path(r.ticker, r.period)
             c.show(c.card_head(f"{r.ticker} · {r.period} 입력", sub=str(path.relative_to(config.ROOT))))
             mine, src = manual.load_inputs(r.ticker, r.period)
-            start = yaml.safe_dump(mine, allow_unicode=True, sort_keys=False) if src == "내 입력" else TEMPLATE
+            if src == "내 입력":
+                start = yaml.safe_dump(mine, allow_unicode=True, sort_keys=False)
+                if not mine.get("consensus"):  # AI 결과를 확정한 파일에는 컨센서스 칸이 없어 어디에 쓸지 모르기 쉽다
+                    start += ("\n# 컨센서스를 넣으려면 아래 주석(#)을 지우고 채우세요.\n"
+                              "# consensus:\n#   revenue: 79조\n#   operating_income: 4.6조\n#   source: \"FnGuide 2026-07-05\"\n")
+            else:
+                start = TEMPLATE
             text = st.text_area("YAML", start, height=460, label_visibility="collapsed", key=f"yaml_{r.ticker}_{r.period}")
             if st.button("검사 후 저장", type="primary"):
                 try:
@@ -69,7 +75,15 @@ def render() -> None:
         text = st.text_input("티커(쉼표로 구분)", ", ".join(wl))
         if st.button("관심 종목 저장"):
             try:
-                tickers = list(dict.fromkeys(clean_ticker(t) for t in text.split(",") if t.strip()))
+                tickers = []
+                for t in (x.strip() for x in text.split(",")):
+                    if not t:
+                        continue
+                    try:
+                        tickers.append(clean_ticker(t))
+                    except ValueError:
+                        raise ValueError(f"'{t}' — 티커 형식이 올바르지 않아요. 예: NVDA, 005930.KS") from None
+                tickers = list(dict.fromkeys(tickers))
                 manual.save_watchlist(tickers)
                 st.success("저장했어요.")
             except ValueError as e:

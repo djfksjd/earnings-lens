@@ -27,7 +27,7 @@
   --shadow: 0 1px 2px rgba(18, 20, 26, .04), 0 8px 24px -12px rgba(18, 20, 26, .14);
   --shadow-lift: 0 2px 4px rgba(18, 20, 26, .05), 0 18px 36px -16px rgba(40, 52, 140, .26);
   --ease-out: cubic-bezier(.16, 1, .3, 1);
-  --rail: 72px;
+  --rail: 88px;
 }
 
 /* ---------- 바탕 ---------- */
@@ -44,7 +44,7 @@ html, body { word-break: keep-all; overflow-wrap: anywhere; }  /* 한국어 단�
 [data-testid="stToolbar"] { right: 1rem; top: .5rem; }
 [data-testid="stMain"] { align-items: flex-start; }
 [data-testid="stMainBlockContainer"] {
-  max-width: calc(1680px + var(--rail)); margin: 0; padding: 1.25rem 2.25rem 7rem calc(var(--rail) + 2.25rem);
+  max-width: none; width: 100%; margin: 0;  /* 넓은 화면에서도 오른쪽이 비지 않게 꽉 채운다 */ padding: 1.25rem 2.25rem 7rem calc(var(--rail) + 2.25rem);
 }
 ::selection { background: rgba(76, 99, 240, .22); color: var(--ink); }
 * { scrollbar-width: thin; scrollbar-color: rgba(18, 20, 26, .18) transparent; }
@@ -62,17 +62,26 @@ a { color: var(--accent-ink); text-underline-offset: 3px; }
   border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow);
   padding: 14px 0; display: flex; flex-direction: column; align-items: center; gap: 6px;
 }
-.st-key-rail [data-testid="stVerticalBlock"] { gap: 6px; align-items: center; }
+.st-key-rail [data-testid="stVerticalBlock"] { gap: 8px; align-items: center; }
 .st-key-rail [data-testid="stPageLink"] a {
-  width: 44px; height: 44px; padding: 0; justify-content: center; border-radius: 14px;
+  width: 54px; height: 54px; padding: 0; justify-content: center; border-radius: 16px;
   transition: background .2s var(--ease-out), transform .2s var(--ease-out);
 }
 .st-key-rail [data-testid="stPageLink"] a:hover { background: var(--accent-soft); transform: translateY(-1px); }
-.st-key-rail [data-testid="stPageLink"] a span[data-testid="stIconMaterial"] { font-size: 22px; color: var(--ink-2); margin: 0; }
+.st-key-rail [data-testid="stPageLink"] a span[data-testid="stIconMaterial"] { font-size: 27px; color: var(--ink-2); margin: 0; }
 .st-key-rail [data-testid="stPageLink"] a p { display: none; }
-.st-key-rail .rail-logo { margin-bottom: 10px; width: 36px; height: 36px; border-radius: 12px; background: var(--ink); display: grid; place-items: center; }
-.st-key-rail .rail-logo span { width: 16px; height: 16px; border-radius: 50%; border: 3px solid #fff; box-shadow: 6px 6px 0 -3px var(--ink), 6px 6px 0 -1px #fff; }
-.st-key-rail .rail-sep { width: 28px; height: 1px; background: var(--line-2); margin: 6px 0; }
+/* 레일 이름표: Streamlit 툴팁은 화면 이동 뒤에도 남아 쌓이므로 CSS 호버 라벨로 대신한다 */
+.st-key-rail [data-testid="stPageLink"] a { position: relative; overflow: visible; }
+.st-key-rail [data-testid="stPageLink"] a > span:last-child { position: absolute; left: 64px; top: 50%; transform: translateY(-50%); pointer-events: none;
+  opacity: 0; transition: opacity .15s var(--ease-out); max-width: none; overflow: visible; }
+.st-key-rail [data-testid="stPageLink"] a > span:last-child p { display: block; margin: 0; white-space: nowrap; background: var(--ink); color: #fff;
+  font-size: .78rem; font-weight: 600; padding: 5px 9px; border-radius: 8px; box-shadow: var(--shadow); }
+@media (hover: hover) { .st-key-rail [data-testid="stPageLink"] a:hover > span:last-child,
+  .st-key-rail [data-testid="stPageLink"] a:focus-visible > span:last-child { opacity: 1; } }
+.st-key-rail [data-testid="stElementContainer"]:has(.rail-logo) { width: 100%; display: flex; justify-content: center; }
+.st-key-rail .rail-logo { margin: 0 auto 10px; flex: none; width: 46px; height: 46px; border-radius: 15px; background: var(--ink); display: grid; place-items: center; }
+.st-key-rail .rail-logo span { width: 20px; height: 20px; border-radius: 50%; border: 3.5px solid #fff; box-shadow: 7px 7px 0 -3.5px var(--ink), 7px 7px 0 -1px #fff; }
+.st-key-rail .rail-sep { width: 36px; height: 1px; background: var(--line-2); margin: 6px 0; }
 
 /* ---------- 상단 바 ---------- */
 .st-key-topbar {
@@ -247,6 +256,18 @@ table.el-table.text th, table.el-table.text td { text-align: left; white-space: 
 .chat-msg.user { background: var(--accent-soft); margin-left: 24px; }
 .chat-msg.ai { background: rgba(18,20,26,.04); margin-right: 12px; }
 
+/* 태블릿·좁은 창(761~1180px): 4열 카드가 찌그러지지 않게 2열로 접는다 */
+@media (min-width: 761px) and (max-width: 1180px) {
+  .st-key-topbar [data-testid="stHorizontalBlock"] { flex-wrap: wrap; gap: 8px; }
+  .st-key-topbar [data-testid="stColumn"]:first-child { flex: 1 1 100% !important; min-width: 100% !important; }
+  .st-key-topbar [data-testid="stColumn"]:not(:first-child) { flex: 1 1 0 !important; min-width: 0 !important; }
+  .price-pill { flex-wrap: wrap; white-space: normal; row-gap: 2px; max-width: 100%; }
+  [data-testid="stHorizontalBlock"]:has(.stat) { flex-wrap: wrap; }
+  [data-testid="stHorizontalBlock"]:has(.stat) > [data-testid="stColumn"] { flex: 1 1 calc(50% - 8px) !important; min-width: calc(50% - 8px) !important; }
+  [data-testid="stHorizontalBlock"]:has(.st-key-card_reaction) { flex-wrap: wrap; }
+  [data-testid="stHorizontalBlock"]:has(.st-key-card_reaction) > [data-testid="stColumn"]:first-child { flex: 1 1 100% !important; min-width: 100% !important; }
+  [data-testid="stHorizontalBlock"]:has(.st-key-card_reaction) > [data-testid="stColumn"]:not(:first-child) { flex: 1 1 calc(50% - 8px) !important; min-width: calc(50% - 8px) !important; }
+}
 @media (max-width: 760px) {
   :root { --rail: 0px; }
   .st-key-rail { top: auto; bottom: 10px; left: 10px; right: 10px; width: auto; height: 60px; flex-direction: row; padding: 0 8px; justify-content: space-around; }

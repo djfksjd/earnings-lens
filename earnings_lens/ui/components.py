@@ -53,7 +53,7 @@ def verdict_chip(v: Verdict) -> str:
     return f'<span class="verdict {esc(v.code)}">{esc(txt)}</span>'
 
 
-def consensus_strip(actual, cons, low, high, verdict: Verdict, fmt_fn) -> str:
+def consensus_strip(actual, cons, low, high, verdict: Verdict, fmt_fn, link: str = "./inputs") -> str:
     """추정 범위(밴드) · 컨센서스(세로 눈금) · 실제(점, 판정 색)."""
     if cons is None:
         # 컨센서스가 없어도 같은 자리에 트랙을 그려 카드 형태를 유지한다
@@ -61,7 +61,7 @@ def consensus_strip(actual, cons, low, high, verdict: Verdict, fmt_fn) -> str:
         return ('<div class="strip"><div class="strip-track empty-track"><span class="rail-line"></span>'
                 f'<span class="tick ghost" style="left:50%"></span>{dot}</div>'
                 '<div class="legend"><span>컨센서스 미입력</span>'
-                '<a href="./inputs" target="_self">컨센서스 입력</a></div></div>')
+                f'<a href="{esc(link)}" target="_self">컨센서스 입력</a></div></div>')
     pts = [p for p in (actual, cons, low, high) if p is not None]
     lo, hi = min(pts), max(pts)
     pad = max((hi - lo) * 0.18, abs(cons) * 0.04, 1e-9)
@@ -142,6 +142,15 @@ def colored_pct(v) -> str:
 
 def page_title(title: str, sub: str = "") -> None:
     st.html(f'<div class="page-title page-in"><div><h1>{esc(title)}</h1>' + (f"<p>{esc(sub)}</p>" if sub else "") + "</div></div>")
+
+
+def money_unit(values, currency: str) -> tuple[float, str]:
+    """차트 축 단위. 원화는 조/억, 그 외는 B/M — 'T'(SI 접두어)가 원화 축에 찍히지 않게."""
+    vals = [abs(v) for v in values if v is not None and v == v]
+    top = max(vals) if vals else 0
+    if currency == "KRW":
+        return (1e12, "조") if top >= 1e12 else (1e8, "억")
+    return (1e9, "B") if top >= 1e9 else (1e6, "M")
 
 
 def plot_layout(fig: go.Figure, height: int = 320) -> go.Figure:

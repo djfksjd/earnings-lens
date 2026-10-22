@@ -168,3 +168,30 @@ def test_segment_total_row_detected():
     from earnings_lens.manual import is_total_row
     assert is_total_row("전사 합계(GAAP)") and is_total_row("Total") and is_total_row("총계")
     assert not is_total_row("Data Center") and not is_total_row("메모리") and not is_total_row(None)
+
+
+def test_combined_ai_keeps_both_guidance_lists(tmp_path, monkeypatch):
+    from earnings_lens import config, manual
+    monkeypatch.setattr(config, "AI_DIR", tmp_path)
+    manual.save_ai("005930.KS", "2026-06", "call", {"guidance": [{"metric": "call"}], "tone": {"label": "긍정"}})
+    manual.save_ai("005930.KS", "2026-06", "release", {"guidance": [{"metric": "release"}], "segments": [{"name": "DS"}]})
+    ai = manual.combined_ai("005930.KS", "2026-06")
+    assert [g["metric"] for g in ai["guidance"]] == ["release", "call"]
+    assert ai["tone"]["label"] == "긍정" and ai["segments"][0]["name"] == "DS"
+
+
+def test_money_unit_uses_korean_units_for_krw():
+    from earnings_lens.ui.components import money_unit
+    assert money_unit([1.7e14, None], "KRW") == (1e12, "조")
+    assert money_unit([3e11], "KRW") == (1e8, "억")
+    assert money_unit([9.6e10], "USD") == (1e9, "B")
+    assert money_unit([], "USD") == (1e6, "M")
+
+
+def test_readable_amounts_round_trip():
+    from earnings_lens.manual import parse_amount, readable_amounts
+    from earnings_lens.ui import fmt
+    out = readable_amounts({"segments": [{"name": "DS", "revenue": 95e12, "note": "x"}], "kpis": [{"value": 40}]},
+                           lambda v: fmt.money(v, "KRW"))
+    assert out["segments"][0]["revenue"] == "95.00조" and parse_amount(out["segments"][0]["revenue"]) == 95e12
+    assert out["kpis"][0]["value"] == 40  # KPI는 단위가 제각각이라 건드리지 않는다
