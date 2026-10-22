@@ -296,3 +296,23 @@ table.el-table.text th, table.el-table.text td { text-align: left; white-space: 
   .st-key-copilot button p, .st-key-copilot button [data-testid="stIconMaterial"] + div { display: none; }
   .st-key-copilot [data-testid="stPopover"] > div > button, .st-key-copilot button[data-testid="stPopoverButton"] { width: 48px; padding: 0; justify-content: center; }
 }
+
+/* 헤드라인: 마스코트(iframe)를 담는 컨테이너. .el-card.headline.tint-peri와 같은 모양 */
+.st-key-hero {
+  background: linear-gradient(160deg, var(--t-peri), rgba(255,255,255,.78) 40%); backdrop-filter: blur(16px) saturate(1.3);
+  border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 6px 22px 6px 8px;
+  animation: rise .7s var(--ease-out) both;
+}
+.st-key-hero [data-testid="stHorizontalBlock"] { flex-wrap: nowrap; }
+.st-key-hero [data-testid="stColumn"]:first-child { min-width: 96px; max-width: 132px; }
+.headline-text h2 { font-size: 1.35rem; margin: 0; padding: 0; font-weight: 750; }
+.headline-text p { margin: 2px 0 0; color: var(--ink-2); font-size: .92rem; }
+.st-key-card_tone, .st-key-card_calltone { background: linear-gradient(160deg, var(--t-lilac), rgba(255,255,255,.78) 40%); }
+.st-key-card_tone [data-testid="stHorizontalBlock"], .st-key-card_calltone [data-testid="stHorizontalBlock"] { flex-wrap: nowrap; }
+@media (max-width: 640px) {
+  .st-key-hero { padding: 4px 12px 4px 4px; }
+  .st-key-hero [data-testid="stColumn"]:first-child { min-width: 72px; max-width: 84px; }
+  .st-key-hero [data-testid="stColumn"]:last-child { display: none; }
+  .headline-text h2 { font-size: 1.08rem; }
+  .headline-text p { display: none; }
+}

@@ -71,7 +71,35 @@ def profile(ticker: str) -> Profile:
     )
 
 
+def _quote_kr(ticker: str) -> dict | None:
+    """한국: fast_info는 전일 종가·현재가가 하루 이상 밀려 있을 때가 있다(실측 2026-10-22).
+    1분봉 마지막 체결가와, 그 날짜 이전의 마지막 확정 일봉 종가로 다시 계산한다."""
+    t = yf.Ticker(ticker)
+    m = _wrap(lambda: t.history(period="5d", interval="1m", auto_adjust=False))
+    if m is None or m.empty or m["Close"].dropna().empty:
+        return None
+    m = m[m["Close"].notna()]
+    ts, last = m.index[-1], _num(m["Close"].iloc[-1])
+    d = _wrap(lambda: t.history(period="15d", interval="1d", auto_adjust=False))
+    closes = d["Close"].dropna() if d is not None and not d.empty else pd.Series(dtype=float)
+    closes = closes[[i.date() < ts.date() for i in closes.index]]
+    prev = _num(closes.iloc[-1]) if len(closes) else None
+    return {
+        "price": last,
+        "prev_close": prev,
+        "change_pct": (last / prev - 1) * 100 if last and prev else None,
+        "currency": "KRW",
+        "source": "yfinance",
+        "delay": "최대 15~20분 지연 · 장 마감 동시호가 미반영",
+        "asof": ts.isoformat(),
+    }
+
+
 def quote(ticker: str) -> dict:
+    if ticker.endswith((".KS", ".KQ")):
+        q = _quote_kr(ticker)
+        if q:
+            return q
     fi = _wrap(lambda: yf.Ticker(ticker).fast_info)
     last = _num(_wrap(lambda: fi.last_price))
     prev = _num(_wrap(lambda: fi.previous_close))

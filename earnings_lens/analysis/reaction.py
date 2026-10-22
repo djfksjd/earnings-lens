@@ -30,6 +30,8 @@ def compute(history: pd.DataFrame, event_ts, bench: pd.DataFrame | None = None) 
     if pos is None or pos == 0:
         return None
     base = history["Close"].iloc[pos - 1]
+    if pd.isna(base) or pd.isna(history["Close"].iloc[pos]):
+        return None  # 빈 일봉(한국 yfinance는 당일 종가가 다음 날 채워진다)으로 계산하면 틀린 값이 나온다
     out = {
         "reaction_date": idx[pos].date().isoformat(),
         "base_close": float(base),
@@ -41,12 +43,14 @@ def compute(history: pd.DataFrame, event_ts, bench: pd.DataFrame | None = None) 
     }
     for n in (5, 20):
         j = pos + n - 1
-        out[f"d{n}_pct"] = float(history["Close"].iloc[j] / base - 1) * 100 if j < len(idx) else None
+        out[f"d{n}_pct"] = float(history["Close"].iloc[j] / base - 1) * 100 if j < len(idx) and pd.notna(history["Close"].iloc[j]) else None
     if bench is not None and not bench.empty:
-        b = bench["Close"]
+        b = bench["Close"].dropna()
         b_base = b[b.index < idx[pos]]
         b_day = b[b.index <= idx[pos]]
-        if len(b_base) and len(b_day):
+        # 지수 일봉이 빠진 날(yfinance ^KS11 실측)이면 기준일이 어긋나 초과수익이 틀린다. 날짜가 맞을 때만 계산
+        same_day = lambda s, ts: len(s) and s.index[-1].date() == ts.date()  # noqa: E731
+        if same_day(b_base, idx[pos - 1]) and same_day(b_day, idx[pos]):
             out["bench_d1_pct"] = float(b_day.iloc[-1] / b_base.iloc[-1] - 1) * 100
             out["excess_d1_pct"] = out["d1_pct"] - out["bench_d1_pct"]
     return out

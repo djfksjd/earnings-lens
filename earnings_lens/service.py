@@ -12,7 +12,7 @@ import streamlit as st
 
 from . import config, manual
 from .analysis import metrics, reaction, snapshots
-from .providers import alphavantage, dart, finnhub, naver, sec, yf
+from .providers import alphavantage, dart, finnhub, fool, krx, marketbeat, naver, sec, yf
 from .providers.http import ProviderError
 
 
@@ -76,6 +76,8 @@ def get_financials(ticker: str) -> tuple[pd.DataFrame, dict[str, str], list[str]
         base, src = pd.DataFrame(columns=yf.METRICS), {}
         warns.append(str(e))
 
+    if not is_kr(ticker) and config.SEC_USER_AGENT and not base.empty:
+        _fill_from_sec(ticker, base, src, warns)
     if is_kr(ticker):
         kr = None
         if config.has("DART_API_KEY"):
@@ -90,12 +92,60 @@ def get_financials(ticker: str) -> tuple[pd.DataFrame, dict[str, str], list[str]
             except ProviderError as e:
                 warns.append(f"네이버: {e}")
         if kr is not None and not kr.empty:
-            # 공식 값으로 덮어쓰되, 공식 소스에 없는 지표(EBITDA 등)는 yfinance 값을 유지
+            if label == "DART":
+                kr = _with_dart_ebitda(ticker, kr, base, src, warns)
+            # 공식 값으로 덮어쓰되, 공식 소스에 없는 지표는 yfinance 값을 유지
             merged = kr.combine_first(base) if not base.empty else kr
             for m in kr.columns:
-                src[m] = label
+                if m != "ebitda":
+                    src[m] = label
             base = merged.reindex(columns=yf.METRICS)
     return base.sort_index(), src, warns
+
+
+def _fill_from_sec(ticker: str, base: pd.DataFrame, src: dict, warns: list) -> None:
+    """yfinance가 최근 분기 매출·영업이익·순이익을 비워 줄 때가 있다(AMZN 2026-06 실측). 그 칸만 10-Q/10-K 원본으로 채운다."""
+    keys = ("revenue", "operating_income", "net_income")
+    gaps = [p for p in list(base.index)[-3:] if base.loc[p, list(keys)].isna().any()]
+    if not gaps:
+        return
+    try:
+        totals = sec.quarterly_totals(ticker, gaps)
+    except (ProviderError, ValueError, KeyError) as e:
+        warns.append(f"SEC 보완: {e}")
+        return
+    for p, vals in totals.items():
+        for k, v in vals.items():
+            if pd.isna(base.at[p, k]):
+                base.at[p, k] = v
+                src[k] = f"{src.get(k, 'yfinance')} + SEC(빈 분기)" if "SEC" not in src.get(k, "") else src[k]
+
+
+def _with_dart_ebitda(ticker: str, kr: pd.DataFrame, base: pd.DataFrame, src: dict, warns: list) -> pd.DataFrame:
+    """EBITDA = DART 영업이익 + 감가상각비·무형자산상각비(XBRL 주석).
+
+    yfinance의 한국 EBITDA는 영업이익과 같은 값이 들어오는 등 믿기 어렵다. 공시로 계산되면 그 값만 쓰고,
+    전혀 계산되지 않을 때만 yfinance 값을 쓰되 영업이익보다 크지 않은 값(감가상각 0)은 버린다."""
+    kr = kr.copy()
+    try:
+        da = dart.quarterly_da(ticker, list(kr.index)[-8:])
+    except (ProviderError, ValueError) as e:
+        warns.append(f"DART 감가상각비: {e}")
+        da = {}
+    if da:
+        kr["ebitda"] = [kr.at[p, "operating_income"] + da[p] if p in da and pd.notna(kr.at[p, "operating_income"]) else None
+                        for p in kr.index]
+        src["ebitda"] = "DART(영업이익+상각비)"
+        if "ebitda" in base.columns:
+            base["ebitda"] = None  # 계산 못 한 분기에 기준이 다른 yfinance 값이 섞이지 않게
+        return kr
+    if "ebitda" in base.columns and "operating_income" in kr.columns:
+        oi = kr["operating_income"].reindex(base.index)
+        bad = base["ebitda"].notna() & oi.notna() & (base["ebitda"] <= oi)
+        if bad.any():
+            base.loc[bad, "ebitda"] = None
+            warns.append("yfinance EBITDA 중 영업이익 이하인 값(감가상각 누락)을 지웠습니다.")
+    return kr
 
 
 @st.cache_data(ttl=timedelta(hours=6), show_spinner=False)
@@ -154,10 +204,18 @@ def get_naver_integration(ticker: str) -> dict:
 
 @st.cache_data(ttl=timedelta(minutes=30), show_spinner=False)
 def get_history(ticker: str, start: str) -> pd.DataFrame:
+    """일봉. 한국은 yfinance의 빈 날(당일 종가 NaN, 지수 일봉 누락)을 KRX 공식 값으로 채운다.
+    KRX를 못 쓰면 빈 날을 그대로 두고, 반응 계산이 그 날을 건너뛰지 않고 '—'로 표시한다."""
     try:
-        return yf.history(ticker, start=start)
+        h = yf.history(ticker, start=start)
     except ProviderError:
-        return pd.DataFrame()
+        h = pd.DataFrame(columns=["Open", "High", "Low", "Close", "Volume"])
+    if (is_kr(ticker) or ticker in ("^KS11", "^KQ11")) and krx.available():
+        try:
+            h, _ = krx.fill_gaps(h, ticker, pd.Timestamp(start).date())
+        except ProviderError:
+            pass  # 승인 전(401)·장애: yfinance 값만 쓴다
+    return h
 
 
 @st.cache_data(ttl=timedelta(hours=6), show_spinner=False)
@@ -179,6 +237,23 @@ def get_disclosures(ticker: str) -> tuple[list[dict], str]:
         return out, ""
     except ProviderError as e:
         return [], str(e)
+
+
+@st.cache_data(ttl=timedelta(hours=12), show_spinner=False)
+def get_segments(ticker: str, period: str) -> tuple[list[dict], str, str]:
+    """공시 XBRL의 사업부문 표. (행, 출처 라벨, 안내/오류)."""
+    try:
+        if is_kr(ticker):
+            if not config.has("DART_API_KEY"):
+                return [], "", "DART_API_KEY를 등록하면 사업부문이 자동으로 채워져요."
+            rows, axes = dart.segments(ticker, period)
+            label = "DART XBRL"
+        else:
+            rows, axes = sec.segments(ticker, period)
+            label = "SEC XBRL"
+    except (ProviderError, ValueError, KeyError) as e:
+        return [], "", str(e)
+    return rows, f"{label} · {axes}" if rows else "", ""
 
 
 @st.cache_data(ttl=timedelta(hours=12), show_spinner=False)
@@ -254,6 +329,10 @@ def consensus_for(ticker: str, period: str, event: pd.Timestamp | None, inputs: 
     eh = get_eps_history(ticker)
     if out["eps"].value is None and not eh.empty and period in eh.index and pd.notna(eh.at[period, "eps_estimate"]):
         out["eps"] = Consensus(float(eh.at[period, "eps_estimate"]), source="yfinance")
+    mb = _marketbeat_row(ticker, period, event)  # 옵트인. 위 소스가 비었을 때만
+    for m, key in (("revenue", "revenue_est"), ("eps", "eps_est")):
+        if out[m].value is None and mb.get(key) is not None:
+            out[m] = Consensus(mb[key], source="MarketBeat")
     mine = inputs.get("consensus") or {}
     src_label = inputs.get("_source", {}).get("consensus", "내 입력")
     for m in out:
@@ -262,6 +341,27 @@ def consensus_for(ticker: str, period: str, event: pd.Timestamp | None, inputs: 
             out[m] = Consensus(v, manual.parse_amount(mine.get(f"{m}_low")), manual.parse_amount(mine.get(f"{m}_high")),
                                f"{src_label}" + (f" · {mine['source']}" if mine.get("source") else ""))
     return out
+
+
+@st.cache_data(ttl=timedelta(hours=12), show_spinner=False)
+def get_marketbeat(ticker: str) -> list[dict]:
+    if is_kr(ticker) or not config.MARKETBEAT_ENABLED:
+        return []
+    try:
+        return marketbeat.history(ticker)
+    except ProviderError:
+        return []
+
+
+def _marketbeat_row(ticker: str, period: str, event: pd.Timestamp | None) -> dict:
+    """분기말 이후 100일 안에 발표된 행. 발표일을 알면 ±3일로 더 좁힌다."""
+    end = pd.Timestamp(period + "-01") + pd.offsets.MonthEnd(0)
+    rows = [r for r in get_marketbeat(ticker) if pd.Timedelta(0) < pd.Timestamp(r["date"]) - end <= pd.Timedelta(days=100)]
+    if event is not None:
+        ev = event.tz_convert(None) if event.tzinfo else event
+        near = [r for r in rows if abs((pd.Timestamp(r["date"]) - ev.normalize()).days) <= 3]
+        rows = near or rows
+    return rows[0] if rows else {}
 
 
 def build_report(ticker: str, period: str | None = None) -> Report:
@@ -273,6 +373,7 @@ def build_report(ticker: str, period: str | None = None) -> Report:
     period = period if period in periods else periods[-1]
     record_snapshots(ticker, periods[-1])
     inputs = manual.merged(ticker, period)
+    _apply_xbrl_segments(ticker, period, fin, inputs, warns)
     fin = fin.copy()
     for m, v in (inputs.get("actual_override") or {}).items():
         val = manual.parse_amount(v)
@@ -302,6 +403,32 @@ def build_report(ticker: str, period: str | None = None) -> Report:
         actual["eps"] = float(eh.at[period, "eps_actual"])  # 추정치와 같은 소스의 실제 EPS로 판정
     verdicts = {m: metrics.verdict(actual[m], c.value) for m, c in cons.items()}
     return Report(ticker, period, prof, fin, src, changes, cons, verdicts, event, inputs, warns, actual)
+
+
+def _apply_xbrl_segments(ticker: str, period: str, fin: pd.DataFrame, inputs: dict, warns: list) -> None:
+    """내 입력이 없으면 공시 XBRL 부문으로 채운다. AI 추출보다 우선(공식 숫자). AI가 단 부문 코멘트는 살린다."""
+    if inputs.get("_source", {}).get("segments") == "내 입력":
+        return
+    rows, label, err = get_segments(ticker, period)
+    if not rows:
+        if err and "SEC_USER_AGENT" in err:
+            warns.append(err)
+        return
+    total = fin.at[period, "revenue"] if period in fin.index and "revenue" in fin.columns else None
+    seg_sum = sum(r["revenue"] or 0 for r in rows)
+    if total and pd.notna(total) and seg_sum > total * 1.6:
+        warns.append(f"공시 부문 합계가 전사 매출의 {seg_sum / total:.1f}배라 자동 부문을 쓰지 않았어요(중복 태깅 의심).")
+        return
+    notes = {_seg_key(s.get("name")): s.get("note") for s in inputs.get("segments") or [] if s.get("note")}
+    for r in rows:
+        if notes.get(_seg_key(r["name"])):
+            r["note"] = notes[_seg_key(r["name"])]
+    inputs["segments"] = rows
+    inputs.setdefault("_source", {})["segments"] = f"자동 · {label}"
+
+
+def _seg_key(name) -> str:
+    return "".join(str(name or "").lower().split()).replace("segment", "").replace("부문", "")
 
 
 def price_reaction(rep: Report) -> tuple[dict | None, pd.DataFrame, pd.DataFrame]:
@@ -356,8 +483,12 @@ def transcript_for(rep: Report) -> tuple[str | None, str, list[dict]]:
     if path.exists():
         turns = alphavantage.transcript(rep.ticker, fq)
         return turns_to_text(turns), "Alpha Vantage", turns
+    turns = fool.cached(rep.ticker, fq)
+    if turns:
+        return turns_to_text(turns), "Motley Fool", turns
     return None, "", []
 
 
 def turns_to_text(turns: list[dict]) -> str:
-    return "\n\n".join(f"[{t['speaker']} — {t['title']}]\n{t['content']}" for t in turns)
+    return "\n\n".join(f"[{t['speaker']}" + (f" — {t['title']}" if t.get("title") else "") + f"]\n{t['content']}" for t in turns)
+

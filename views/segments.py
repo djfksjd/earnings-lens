@@ -20,7 +20,8 @@ def render() -> None:
     segs = [s for s in (r.inputs.get("segments") or []) if not manual.is_total_row(s.get("name"))]
     if not segs:
         c.show(c.card("세그먼트 데이터가 없어요", c.empty(
-            "무료 API는 사업부문 수치를 주지 않아요. 두 가지 방법 중 하나를 쓰세요.<br>"
+            "공시 XBRL에서 사업부문을 찾지 못했어요. 분기 보고서가 아직 안 나왔거나, 회사가 부문을 태깅하지 않은 경우예요"
+            "(미국은 <code>SEC_USER_AGENT</code>, 한국은 <code>DART_API_KEY</code>가 필요해요). 두 가지 방법 중 하나를 쓰세요.<br>"
             "① <b>컨콜</b> 화면 → <b>보도자료로 AI 추출</b>(미국: SEC 8-K 자동, 한국: IR 자료 붙여넣기)<br>"
             f"② <b>입력 관리</b>에서 <code>segments</code>에 직접 입력 · 파일 위치 <code>my_inputs/companies/{r.ticker.replace('.', '_')}/{r.period}.yaml</code>"),
             i=0))

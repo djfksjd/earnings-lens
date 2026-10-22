@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import io
 import json
+import re
 import time
 import zipfile
 from datetime import date, timedelta
@@ -11,6 +12,7 @@ from xml.etree import ElementTree
 import pandas as pd
 
 from .. import config
+from . import xbrl
 from .http import ProviderError, get
 
 BASE = "https://opendart.fss.or.kr/api"
@@ -140,6 +142,164 @@ def quarterly_financials(ticker: str, years: int = 3) -> pd.DataFrame:
         for month, vals in per_q.items():
             out[f"{year}-{month:02d}"] = vals
     return pd.DataFrame.from_dict(out, orient="index").sort_index()
+
+
+# ---------- XBRL 원본(주석 포함): 감가상각비 → EBITDA ----------
+# 단일회사 재무제표 API(fnlttSinglAcntAll)는 본문만 준다. 대형사는 감가상각비를 주석에만 적어서
+# 정기보고서 XBRL 원본(fnlttXbrl.xml)을 받아 읽는다. 보고서 1건 약 0.5MB, 받은 뒤 영구 캐시.
+
+_REPORT_NAME = {"11013": "분기보고서", "11012": "반기보고서", "11014": "분기보고서", "11011": "사업보고서"}
+# 합계 개념이 있으면 그것만, 없으면 감가상각 + 무형자산상각을 더한다. 마지막은 현금흐름표 본문의 조정 항목.
+_DA_TOTAL = ("DepreciationAndAmortisationExpense", "DepreciationAmortisationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLoss")
+_DEP = ("DepreciationExpense", "DepreciationPropertyPlantAndEquipmentIncludingRightofuseAssets")
+_DEP_PARTS = ("DepreciationPropertyPlantAndEquipment", "DepreciationRightofuseAssets")
+_AMORT = ("AmortisationExpense", "AmortisationIntangibleAssetsOtherThanGoodwill")
+_CF_DA = ("AdjustmentsForDepreciationAndAmortisationExpense",)
+_CF_PARTS = ("AdjustmentsForDepreciationExpense", "AdjustmentsForAmortisationExpense")
+_CONSOLIDATED = (("ifrs-full:ConsolidatedAndSeparateFinancialStatementsAxis", "ifrs-full:ConsolidatedMember"),)
+_SEPARATE = (("ifrs-full:ConsolidatedAndSeparateFinancialStatementsAxis", "ifrs-full:SeparateMember"),)
+
+
+def _rcept_no(corp: str, year: int, code: str) -> str | None:
+    """정기보고서 접수번호. 정정 보고서가 있으면 최신 것."""
+    month = REPORTS[code]
+    data = _call("list.json", corp_code=corp, bgn_de=f"{year}0101", end_de=f"{year + 1}1231",
+                 pblntf_ty="A", page_count="100")
+    tag = f"({year}.{month:02d})"
+    for d in data.get("list", []):  # 최신순
+        name = d.get("report_nm", "")
+        if _REPORT_NAME[code] in name and tag in name:
+            return d.get("rcept_no")
+    return None
+
+
+def _xbrl_files(corp: str, year: int, code: str) -> tuple[bytes, bytes] | None:
+    """(인스턴스, 한국어 레이블). 없으면 None. 공시는 바뀌지 않으므로 영구 캐시."""
+    folder = _cache_path(f"xbrl/{corp}_{year}_{code}")
+    inst, lab, miss = folder / "instance.xbrl", folder / "lab-ko.xml", folder / "missing"
+    if inst.exists():
+        return inst.read_bytes(), lab.read_bytes() if lab.exists() else b""
+    if miss.exists() and time.time() - miss.stat().st_mtime < 86400:
+        return None
+    folder.mkdir(parents=True, exist_ok=True)
+    rno = _rcept_no(corp, year, code)
+    r = get(f"{BASE}/fnlttXbrl.xml", params={"crtfc_key": _key(), "rcept_no": rno, "reprt_code": code},
+            timeout=60) if rno else None
+    if r is None or r.content[:2] != b"PK":
+        miss.touch()  # 아직 제출 전이거나 XBRL이 없는 보고서. 하루 뒤 다시 본다
+        return None
+    with zipfile.ZipFile(io.BytesIO(r.content)) as z:
+        names = z.namelist()
+        inst_name = next((n for n in names if n.endswith(".xbrl")), None)
+        lab_name = next((n for n in names if n.endswith("_lab-ko.xml")), None)
+        if not inst_name:
+            miss.touch()
+            return None
+        inst.write_bytes(z.read(inst_name))
+        if lab_name:
+            lab.write_bytes(z.read(lab_name))
+    return inst.read_bytes(), lab.read_bytes() if lab.exists() else b""
+
+
+def _report_facts(corp: str, year: int, code: str) -> list:
+    files = _xbrl_files(corp, year, code)
+    if not files:
+        return []
+    try:
+        facts = xbrl.parse_instance(files[0])
+    except ElementTree.ParseError:
+        return []
+    # 주석 표의 '보고금액' 축은 본문 값과 같은 숫자다. 축을 떼어 본문과 같은 조건으로 찾게 한다.
+    return [xbrl.Fact(f.concept, tuple(d for d in f.dims if d[1] != "dart:ReportedAmountMember"), f.start, f.end, f.value)
+            for f in facts]
+
+
+def _da_methods(facts: list, end) -> dict[str, tuple[float | None, float | None]]:
+    """계산 방법별 (3개월 값, 연초 누적 값). 연결 → 축 없음 → 개별 중 값이 있는 첫 범위만 쓴다.
+    분기 차이를 낼 때 두 보고서가 같은 방법을 써야 하므로 방법별로 따로 돌려준다."""
+    def pair(concepts, dims):
+        return xbrl.quarter_value(facts, concepts, end, dims=dims), xbrl.ytd_value(facts, concepts, end, dims=dims)[0]
+
+    def add(*vals):
+        return None if vals[0] is None else sum(v for v in vals if v is not None)
+
+    for dims in (_CONSOLIDATED, (), _SEPARATE):
+        out: dict[str, tuple] = {}
+        out["total"] = pair(_DA_TOTAL, dims)
+        dep, amort = pair(_DEP, dims), pair(_AMORT, dims)
+        out["dep_amort"] = (add(dep[0], amort[0]), add(dep[1], amort[1]))
+        ppe, rou = pair(_DEP_PARTS[:1], dims), pair(_DEP_PARTS[1:], dims)
+        out["parts"] = (add(ppe[0], rou[0], amort[0]), add(ppe[1], rou[1], amort[1]))
+        out["cf_total"] = pair(_CF_DA, dims)
+        cdep, camort = pair(_CF_PARTS[:1], dims), pair(_CF_PARTS[1:], dims)
+        out["cf_parts"] = (add(cdep[0], camort[0]), add(cdep[1], camort[1]))
+        out = {k: v for k, v in out.items() if v[0] is not None or v[1] is not None}
+        if out:
+            return out
+    return {}
+
+
+def quarterly_da(ticker: str, periods: list[str]) -> dict[str, float]:
+    """분기(3개월) 감가상각비+무형자산상각비.
+
+    3개월 값이 공시돼 있으면 그대로, 없으면(4분기 등) 같은 계산 방법의 누적값 차이로 구한다.
+    감가상각비는 분기마다 크게 변하지 않는다. 중앙값과 2배 넘게 차이 나면 태깅 오류로 보고 버린다.
+    """
+    corp = corp_code(ticker.split(".")[0])
+    cache: dict[str, dict] = {}
+
+    def methods(p: str) -> dict:
+        if p not in cache:
+            y, m = int(p[:4]), int(p[5:7])
+            code = next((c for c, mm in REPORTS.items() if mm == m), None)
+            end = (pd.Timestamp(p + "-01") + pd.offsets.MonthEnd(0)).date()
+            cache[p] = _da_methods(_report_facts(corp, y, code), end) if code else {}
+        return cache[p]
+
+    out: dict[str, float] = {}
+    for p in periods:
+        cur = methods(p)
+        prev = methods(f"{p[:4]}-{int(p[5:7]) - 3:02d}") if p[5:7] != "03" else {}
+        for name in ("total", "dep_amort", "parts", "cf_total", "cf_parts"):
+            q, ytd = cur.get(name, (None, None))
+            if q is None and ytd is not None:
+                if p[5:7] == "03":
+                    q = ytd
+                elif (prev.get(name, (None, None))[1] or 0) > 0 and ytd > prev[name][1]:
+                    q = ytd - prev[name][1]
+            if q is not None and q > 0:
+                out[p] = q
+                break
+    if len(out) >= 3:
+        med = float(pd.Series(list(out.values())).median())
+        out = {p: v for p, v in out.items() if med / 2 <= v <= med * 2}
+    return out
+
+
+def segments(ticker: str, period: str) -> tuple[list[dict], str]:
+    """분기 사업부문 매출·영업이익(전분기·전년동기 포함). 대부분 누적값만 공시해 누적 차이로 계산한다."""
+    corp = corp_code(ticker.split(".")[0])
+    loaded: dict[tuple, tuple | None] = {}
+
+    def load(d: date):
+        ts = pd.Timestamp(d)
+        for cand in (ts + pd.offsets.MonthEnd(0), ts - pd.offsets.MonthEnd(1)):
+            code = next((c for c, mm in REPORTS.items() if mm == cand.month), None)
+            if code and abs((cand - ts).days) <= 15:
+                key = (cand.year, code)
+                if key not in loaded:
+                    files = _xbrl_files(corp, cand.year, code)
+                    facts = _report_facts(corp, cand.year, code) if files else []
+                    loaded[key] = (facts, xbrl.parse_labels(files[1], "ko") if files and files[1] else {},
+                                   cand.date()) if facts else None
+                return loaded[key]
+        return None
+
+    end = (pd.Timestamp(period + "-01") + pd.offsets.MonthEnd(0)).date()
+    rows, axes = xbrl.build_segments(load, end)
+    for r in rows:  # 한국어 레이블 끝의 '[구성요소]' 같은 표식 제거
+        r["name"] = re.sub(r"\s*\[[^\]]*\]\s*$", "", r["name"]).strip()
+    return rows, axes
 
 
 def disclosures(ticker: str, days: int = 120) -> list[dict]:

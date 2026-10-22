@@ -20,6 +20,14 @@ def render() -> None:
     rows.append(["<b>네이버 증권 수집</b><br><span class='card-sub'>NAVER_SCRAPING_ENABLED</span>",
                  f'<span class="pill {"up" if config.NAVER_ENABLED else ""}">{"켜짐" if config.NAVER_ENABLED else "꺼짐"}</span>',
                  "한국 실시간 시세·분기 컨센서스(E)·목표주가. robots.txt가 자동 수집을 막고 있어 기본은 꺼짐", "—"])
+    for flag, env, on, purpose in (
+        ("MarketBeat 수집", "MARKETBEAT_SCRAPING_ENABLED", config.MARKETBEAT_ENABLED,
+         "미국 과거 분기 매출·EPS 컨센서스(Alpha Vantage가 없을 때). 약관이 자동 수집을 금지해 기본은 꺼짐"),
+        ("Motley Fool 수집", "FOOL_SCRAPING_ENABLED", config.FOOL_ENABLED,
+         "미국 컨콜 원문(버튼을 누를 때 1건). 약관이 자동 수집을 금지해 기본은 꺼짐"),
+    ):
+        rows.append([f"<b>{flag}</b><br><span class='card-sub'>{env}</span>",
+                     f'<span class="pill {"up" if on else ""}">{"켜짐" if on else "꺼짐"}</span>', purpose, "—"])
     c.show(c.card("데이터 소스", c.table(["소스", "상태", "쓰는 곳", "링크"], rows, raw_cols={0, 1, 2, 3}, text=True), i=0,
                   sub="모두 무료. 키가 없어도 yfinance만으로 기본 화면은 동작해요."))
     st.write("")

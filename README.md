@@ -5,15 +5,15 @@
 
 | # | 항목 | 어디서 오나 |
 |---|---|---|
-| 1 | 매출액·영업이익·EBITDA·EPS의 QoQ / YoY | 자동 (yfinance · DART · 네이버) |
-| 2 | 컨센서스 대비 서프라이즈 / 쇼크 | 자동 (yfinance · Alpha Vantage · 스냅샷) + 직접 입력 |
-| 3 | 사업부문별 매출·영업이익 (QoQ/YoY) | AI 추출 (SEC 보도자료 · IR 자료) + 직접 입력 |
+| 1 | 매출액·영업이익·EBITDA·EPS의 QoQ / YoY | 자동 (yfinance · DART · SEC 원본 · 네이버). 한국 EBITDA는 DART 주석의 감가상각비로 계산 |
+| 2 | 컨센서스 대비 서프라이즈 / 쇼크 | 자동 (yfinance · Alpha Vantage · 스냅샷 · MarketBeat 옵트인) + 직접 입력 |
+| 3 | 사업부문별 매출·영업이익 (QoQ/YoY) | **자동 (SEC 10-Q/10-K · DART 정기보고서 XBRL 원본)** + AI 추출 + 직접 입력 |
 | 4 | 기업별 KPI 변화 | AI 추출 + 직접 입력 |
 | 5 | 전분기 대비 컨콜 톤 변화 | AI 분석 (+ Alpha Vantage 감성 점수) |
 | 6 | 가이던스 | AI 추출 + 직접 입력 |
 | 7 | Q&A · CEO 핵심 발언 | AI 분석 |
 | 8 | 앞으로의 카탈리스트(체크포인트) | 자동(다음 발표일·공시) + AI + 직접 입력 |
-| 9 | 주가 반응 (갭·D+1·D+5·D+20·시장 대비) | 자동 (yfinance) |
+| 9 | 주가 반응 (갭·D+1·D+5·D+20·시장 대비) | 자동 (yfinance, 한국은 KRX 공식 시세로 빈 날 보완) |
 
 <p align="center">
   <img src="docs/images/overview-desktop.jpg" alt="Earnings Lens 개요 화면 (데스크톱)" width="78%">
@@ -369,7 +369,13 @@ DART_API_KEY=여기에_키
 - **매출 구성**: 부문 매출 비중 도넛입니다.
 - **부문 코멘트**: 각 부문의 `note`입니다.
 - "전사 합계", "Total" 같은 **합계 행은 자동으로 뺍니다**(비중이 틀어지지 않게).
-- 데이터가 없으면 채우는 방법 두 가지가 안내됩니다.
+- **자동 채움**: 분기 보고서의 XBRL 원본에서 부문 숫자를 그대로 읽습니다. 출처 배지가 `자동 · SEC XBRL · 보고부문`/`자동 · DART XBRL · 보고부문`으로 나옵니다.
+  - 미국: 10-Q/10-K(`SEC_USER_AGENT` 필요). 전분기·전년동기 값도 이전 보고서에서 함께 채웁니다.
+  - 한국: DART 정기보고서(`DART_API_KEY` 필요). 한국 회사는 부문을 *누적값*으로만 공시하는 경우가 많아 직전 보고서 누적과의 차이로 분기 값을 계산합니다.
+  - 회사가 부문을 태깅하지 않으면(은행, 일부 코스닥) 비어 있습니다. 부문 대신 *제품·서비스별* 매출만 있으면 그것을 씁니다.
+  - 부문 합계는 내부거래 때문에 전사 매출과 다를 수 있습니다(예: 현대차). 합계가 전사의 1.6배를 넘으면 중복 태깅으로 보고 쓰지 않습니다.
+- 우선순위: **내 입력 > 공시 XBRL > AI 추출**. AI가 단 부문 코멘트는 XBRL 숫자 옆에 그대로 붙습니다.
+- 자동으로 못 채우면 채우는 방법 두 가지가 안내됩니다.
   1. 컨콜 → 보도자료 AI 추출
   2. 입력 관리에서 직접 입력
 
@@ -562,13 +568,16 @@ DART_API_KEY=여기에_키
 
 | 화면 · 항목 | 키 없이 | 키를 넣으면 |
 |---|---|---|
-| 실적 숫자(미국) | yfinance | 같음 |
-| 실적 숫자(한국) | yfinance(가끔 늦거나 빠짐) | **DART 공식 재무제표**로 교체(`DART_API_KEY`). 네이버를 켜면 빈 분기를 네이버 값으로 보완 |
+| 실적 숫자(미국) | yfinance | yfinance가 비운 최근 분기를 **10-Q/10-K 원본**으로 채움(`SEC_USER_AGENT`) |
+| 실적 숫자(한국) | yfinance(값이 틀리는 경우 있음: NAVER 영업이익=매출 등) | **DART 공식 재무제표**로 교체(`DART_API_KEY`). EBITDA도 DART 영업이익+감가상각비로 계산. 네이버를 켜면 빈 분기를 네이버 값으로 보완 |
 | EPS 판정 | ✅ yfinance | 같음 |
 | 매출 판정(미국) | 스냅샷이 쌓인 뒤부터 | **과거 분기도 바로**(`ALPHAVANTAGE_API_KEY`) |
 | 매출·영업이익 판정(한국) | 직접 입력 | 네이버를 켜면 다음 분기부터 스냅샷 자동 |
-| 컨콜 원문(미국) | 붙여넣기만 | **버튼 한 번**(`ALPHAVANTAGE_API_KEY`) + 발언별 감성 점수 |
-| 보도자료 → 세그먼트·KPI·가이던스(미국) | IR 텍스트 붙여넣기 | **SEC 8-K 자동 목록**(`SEC_USER_AGENT`) |
+| 컨콜 원문(미국) | 붙여넣기만 | **버튼 한 번**(`ALPHAVANTAGE_API_KEY`) + 발언별 감성 점수. 옵트인 `FOOL_SCRAPING_ENABLED`로 Motley Fool 원문도 가능 |
+| 매출 판정(미국, 과거 분기) | 스냅샷이 쌓인 뒤부터 | 옵트인 `MARKETBEAT_SCRAPING_ENABLED`로 최근 8개 분기 매출·EPS 컨센서스 |
+| 주가 반응(한국) | yfinance(당일 종가가 다음 날 채워지고 지수 일봉이 빠지는 날이 있음 → 그 날은 `—`) | **KRX 공식 시세**로 빈 날을 채움(`KRX_OPEN_API_KEY`) |
+| 사업부문 | AI 추출·직접 입력 | **공시 XBRL에서 자동**(미국 `SEC_USER_AGENT`, 한국 `DART_API_KEY`) |
+| 보도자료 → KPI·가이던스(미국) | IR 텍스트 붙여넣기 | **SEC 8-K 자동 목록**(`SEC_USER_AGENT`) |
 | 관련 공시 카드 | 안내 문구 | 미국 SEC / 한국 DART 공시 목록 |
 | 가격 알약 | 노란 점(지연) | 초록 점(실시간): 미국 `FINNHUB_API_KEY`, 한국 `NAVER_SCRAPING_ENABLED=true` |
 | 증권사 시각 카드(한국) | 없음 | 목표주가·투자의견·리포트 제목(네이버) |
@@ -738,11 +747,14 @@ notes: |
 | 이름 | `.env` 항목 | 필요도 | 무료 한도 | 쓰는 곳 |
 |---|---|---|---|---|
 | yfinance | (키 없음) | 자동 | 비공식, 과호출 시 일시 차단 | 손익·EPS 추정/실적·발표일·가격·뉴스 |
-| SEC EDGAR | `SEC_USER_AGENT` | 미국 권장 | 초당 10회 | 8-K 실적 보도자료·CFO 코멘터리 원문 |
+| SEC EDGAR | `SEC_USER_AGENT` | 미국 권장 | 초당 10회 | 8-K 실적 보도자료·CFO 코멘터리 원문, 10-Q/10-K XBRL(사업부문·빈 분기 보완) |
 | Alpha Vantage | `ALPHAVANTAGE_API_KEY` | 미국 권장 | **하루 25회** | 컨콜 트랜스크립트(발언별 감성), 과거 분기 매출·EPS 컨센서스 |
-| OpenDART | `DART_API_KEY` | 한국 권장 | 하루 약 2만 회 | 공식 분기 재무제표, 실적·IR 공시 |
+| OpenDART | `DART_API_KEY` | 한국 권장 | 하루 약 2만 회 | 공식 분기 재무제표, 실적·IR 공시, 정기보고서 XBRL(감가상각비→EBITDA, 사업부문) |
+| KRX Open API | `KRX_OPEN_API_KEY` | 한국 권장 | 하루 1만 회 | 공식 일별 시세(종가 동시호가 반영)·지수. yfinance 빈 날 보완 |
 | Finnhub | `FINNHUB_API_KEY` | 선택 | 분당 60회 | 미국 실시간 시세 |
 | 네이버 증권 | `NAVER_SCRAPING_ENABLED` | 선택(옵트인) | — | 한국 실시간 시세, 분기 실적·컨센서스(E), 목표주가, 리포트 제목 |
+| MarketBeat | `MARKETBEAT_SCRAPING_ENABLED` | 선택(옵트인) | 종목당 하루 1회 | 미국 과거 8개 분기 매출·EPS 컨센서스 |
+| Motley Fool | `FOOL_SCRAPING_ENABLED` | 선택(옵트인) | 버튼 1회당 1건 | 미국 컨콜 원문 |
 | Claude 플랜 | (키 없음, CLI 로그인) | AI 기능 | 플랜 사용량 | 톤·발언·Q&A·세그먼트·가이던스·KPI 추출, Ask Lens |
 
 ### 등록 방법
@@ -769,6 +781,14 @@ SEC_USER_AGENT=Hong Gildong hong@example.com
 
 **Finnhub (선택)** — <https://finnhub.io/register> 가입 → 대시보드의 *API Key* 복사 → `FINNHUB_API_KEY=`
 
+**KRX Open API (한국 권장)**
+
+1. <https://openapi.krx.co.kr> 회원가입 → *API 인증키 신청* → 발급된 키를 `KRX_OPEN_API_KEY=`에 붙여넣기
+2. **서비스 이용신청을 따로 해야 합니다.** *서비스 이용 → 주식/지수* 에서 아래 4개를 신청하고 승인(약 1일)을 기다리세요. 승인 전에는 401이 나오고, 앱은 자동으로 yfinance만 씁니다.
+   - 유가증권 일별매매정보 · 코스닥 일별매매정보 · KOSPI 시리즈 일별시세정보 · KOSDAQ 시리즈 일별시세정보
+
+> 왜 필요한가요? yfinance 한국 데이터에는 장 마감 동시호가(15:20~15:30)가 빠져 있어 당일 종가가 다음 날에야 채워지고, 코스피 지수 일봉이 통째로 빠지는 날도 있습니다(2026-10-22 실측). KRX는 그 빈 날만 골라 공식 값으로 채웁니다.
+
 **네이버 증권 수집 (선택, 옵트인)**
 
 네이버 증권은 키 없이 한국 종목의 실시간 시세와 *다음 분기 컨센서스(E)* 를 보여줍니다. 그런데 네이버의 `robots.txt`는 자동 수집을 막고 있고(`Disallow: /`), 이용약관도 무단 수집을 제한할 수 있습니다. 그래서 **기본값은 꺼짐**입니다. 개인 학습 목적에 한해 **본인 판단으로** 켤 수 있습니다.
@@ -793,8 +813,16 @@ KIS Open API도 무료이고 실시간 시세를 주지만 **한국투자증권 
 | KIS | ❌ 없음 |
 | **Alpha Vantage** | ✅ **미국 기업, 무료 키로 하루 25회** |
 | SEC 8-K | △ 보도자료·CFO 코멘터리(일부 회사는 원고 전문) |
+| Motley Fool (옵트인) | ✅ 미국 기업 전문. robots.txt는 허용, **약관은 자동 수집 금지** → 기본 꺼짐 |
 
-그래서 **미국은 Alpha Vantage + SEC로 자동**, **한국은 IR 자료를 붙여넣고 AI로 분석**하는 구조입니다.
+그래서 **미국은 Alpha Vantage + SEC로 자동**(원하면 Fool 옵트인), **한국은 IR 자료를 붙여넣고 AI로 분석**하는 구조입니다.
+
+**MarketBeat·Motley Fool 수집 (선택, 옵트인)** — 두 사이트 모두 `robots.txt`는 해당 페이지를 막지 않지만, 이용약관이 로봇·스크립트를 통한 자동 수집을 금지하고 개인 1인·비상업 사용만 허용합니다. 그래서 **기본값은 꺼짐**이고, 개인 학습 목적에 한해 본인 판단으로 켤 수 있습니다.
+
+```dotenv
+MARKETBEAT_SCRAPING_ENABLED=true   # 과거 분기 매출·EPS 컨센서스 (종목당 하루 1회)
+FOOL_SCRAPING_ENABLED=true         # 컨콜 화면의 'Motley Fool에서 가져오기' 버튼 (1회당 1건, 영구 캐시)
+```
 
 ---
 
@@ -856,6 +884,25 @@ tailscale funnel --bg 8765
 
 ---
 
+## 6-4. Lens 마스코트 (3D 캐릭터)
+
+개요 헤드라인, 컨콜 톤 카드, Ask Lens 창의 오브 캐릭터는 상황에 맞춰 표정과 동작이 바뀝니다. 마우스를 따라 보고, 클릭하면 반응합니다.
+
+| 상황 | 기분 | 눈 · 동작 |
+|---|---|---|
+| 어닝 서프라이즈 | 최고예요 | ★ 별 눈, 점프하며 한 바퀴, 머리 위 별, 반짝이 |
+| 컨센서스 상회 | 좋아요 | ^ ^ 웃는 눈, 깡충, 박수 |
+| 부합 | 무난해요 | 기본 눈, 끄덕 |
+| 하회 | 아쉬워요 | 처진 눈, 손으로 얼굴, 식은땀 |
+| 어닝 쇼크 | 헉! | O O 놀란 눈 ↔ > < 질끈, 뒤로 흠칫, ! |
+| 컨센서스 없음 | 흠? | 두리번, 돋보기, ? |
+| 컨콜 톤 분석 전 | 졸려요 | – – 감은 눈, Zz |
+| 톤: 자신감 / 긍정 / 신중 / 부정 | 뿌듯 / 좋아요 / 아쉬워요 / 속상해요 | 톤 색으로 몸이 물든다 |
+
+- 모델: Morphloom(Sceliph, 로컬 3D 에셋 도구)으로 만든 `static/mascot/lens-orb.glb`(몸·눈·손·볼·돋보기·별이 이름 있는 부품). 원본 IR은 Morphloom의 `work/lens-orb/job.json`이고 `review-pass` 단계입니다(애니메이션은 리깅이 아니라 런타임 절차적 동작).
+- 런타임: `static/mascot/src/mascot.js`(three.js r179) → `static/mascot/mascot.bundle.js`. 고친 뒤 `THREE_NODE_MODULES=<three가 든 node_modules> scripts/build_mascot.sh`로 다시 빌드합니다.
+- WebGL을 못 쓰면 회색 CSS 오브로 대신합니다. 움직임 줄이기(prefers-reduced-motion) 설정이면 깜빡임 정도만 남깁니다.
+
 ## 7. 폴더 구조
 
 ```text
@@ -872,7 +919,7 @@ earnings-lens/
 │  ├─ service.py              # 소스 우선순위 병합 + 캐시 (화면은 이것만 호출)
 │  ├─ manual.py               # my_inputs/ 읽기·쓰기, AI 결과 병합
 │  ├─ ai.py                   # Claude Code CLI 호출 (도구 없음, 구조화 JSON)
-│  ├─ providers/              # yfinance · DART · SEC · Alpha Vantage · Finnhub · 네이버
+│  ├─ providers/              # yfinance · DART · SEC · XBRL 파서 · KRX · Alpha Vantage · Finnhub · 네이버 · MarketBeat · Fool
 │  ├─ analysis/               # QoQ/YoY·판정, 컨센서스 스냅샷, 주가 반응
 │  └─ ui/                     # 테마 CSS, 카드·스트립·오브 컴포넌트, 셸
 ├─ views/                     # 화면 9개

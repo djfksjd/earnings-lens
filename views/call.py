@@ -8,10 +8,11 @@ import streamlit as st
 
 from earnings_lens import ai, config, manual, service
 from earnings_lens.analysis.metrics import prev_period
-from earnings_lens.providers import alphavantage, sec
+from earnings_lens.providers import alphavantage, fool, sec
 from earnings_lens.providers.http import ProviderError
 from earnings_lens.security import esc
 from earnings_lens.ui import components as c
+from earnings_lens.ui import mascot
 from earnings_lens.ui import fmt
 from views import _common as k
 
@@ -47,17 +48,25 @@ def results(r: service.Report, turns: list[dict]) -> None:
             if p.exists():
                 prev = _exec_sentiment(alphavantage.transcript(r.ticker, pfq))
         now = _exec_sentiment(turns) if turns else None
-        if tone:
-            body = (f'<div style="display:flex;gap:16px;align-items:center">{c.orb(tone.get("score"), tone.get("label"), "lg")}'
-                    f'<div><b style="font-size:1.4rem">{esc(tone.get("label", ""))}</b><br><span class="card-sub">'
-                    f'전분기 대비 {esc(tone.get("vs_last", ""))}</span></div></div>{c.tone_meter(tone.get("score"))}'
-                    f'<p style="font-size:.9rem;line-height:1.6;color:var(--ink-2)">{esc(tone.get("summary", ""))}</p>')
-        else:
-            body = c.empty("아직 분석 전이에요. <b>원문 · AI 실행</b> 탭에서 시작하세요.")
-        if now is not None:
-            body += (f'<div class="deltas" style="margin-top:8px"><span>경영진 감성(AV) <b>{now:+.2f}</b></span>'
-                     + (f'<span>전분기 <b>{prev:+.2f}</b></span>' if prev is not None else "") + "</div>")
-        c.show(c.card("경영진 톤", body, i=0, tint="lilac", source=k.section_source(r, "tone")))
+        with st.container(key="card_calltone"):
+            c.show(c.card_head("경영진 톤", source=k.section_source(r, "tone")))
+            pic, text = st.columns([0.36, 0.64], vertical_alignment="center", gap="small")
+            with pic:
+                mascot.render(mascot.tone_mood(tone), height=120,
+                              hue=c.tone_hue(tone.get("score"), tone.get("label")) if tone else None)
+            with text:
+                st.html(f'<b style="font-size:1.4rem">{esc(tone.get("label", ""))}</b><br><span class="card-sub">'
+                        f'전분기 대비 {esc(tone.get("vs_last", ""))}</span>' if tone else
+                        '<span class="card-sub">아직 분석 전이에요. <b>원문 · AI 실행</b> 탭에서 시작하세요.</span>')
+            body = ""
+            if tone:
+                body = (f'{c.tone_meter(tone.get("score"))}'
+                        f'<p style="font-size:.9rem;line-height:1.6;color:var(--ink-2)">{esc(tone.get("summary", ""))}</p>')
+            if now is not None:
+                body += (f'<div class="deltas" style="margin-top:8px"><span>경영진 감성(AV) <b>{now:+.2f}</b></span>'
+                         + (f'<span>전분기 <b>{prev:+.2f}</b></span>' if prev is not None else "") + "</div>")
+            if body:
+                st.html(body)
         changes = tone.get("changes") or []
         if changes:
             st.write("")
@@ -100,6 +109,16 @@ def sources_panel(r: service.Report, text: str | None, src: str) -> None:
                     st.error(str(e))
             if disabled:
                 st.caption("ALPHAVANTAGE_API_KEY를 .env에 넣으면 미국 컨콜 원문을 무료로 받을 수 있어요.")
+            if st.button("Motley Fool에서 가져오기", disabled=not config.FOOL_ENABLED,
+                         help="옵트인 수집(.env의 FOOL_SCRAPING_ENABLED). 사이트 약관이 자동 수집을 금지하니 개인 학습 용도로만 쓰세요."):
+                ev = r.event.tz_convert(None).date() if r.event is not None and r.event.tzinfo else (
+                    r.event.date() if r.event is not None else None)
+                try:
+                    fool.transcript(r.ticker, fq, ev)
+                    st.toast("가져왔어요. 저장된 원문으로 분석할 수 있어요.", icon=":material/check:")
+                    st.rerun()
+                except ProviderError as e:
+                    st.error(str(e))
         else:
             st.caption("한국 기업 컨콜 원문은 무료 API가 없어요. IR 페이지의 녹취록·발표 요지를 붙여넣으세요.")
         pasted = st.text_area("원문 붙여넣기", height=160, placeholder="컨콜 녹취록이나 발표 요지를 붙여넣고 저장하세요.")

@@ -50,6 +50,9 @@ KEY_SPECS: tuple[KeySpec, ...] = (
     KeySpec("FINNHUB_API_KEY", "Finnhub", False,
             "미국 주식 실시간 시세(무료 분당 60회). 없으면 yfinance 시세 사용",
             "https://finnhub.io/register"),
+    KeySpec("KRX_OPEN_API_KEY", "KRX Open API", False,
+            "한국 공식 일별 시세. yfinance가 빠뜨린 종가(장 마감 동시호가)·지수 일봉을 채움. 서비스별 이용신청 승인 필요",
+            "https://openapi.krx.co.kr"),
 )
 
 
@@ -73,6 +76,9 @@ AI_ENABLED = _get("AI_ENABLED").lower() not in {"0", "false", "no", "off"}
 PRICE_REFRESH_SECONDS = max(10, int(_get("PRICE_REFRESH_SECONDS") or 30))
 # 네이버 증권은 robots.txt로 자동 수집을 막고 있다. 사용자가 직접 켠 경우에만 쓴다.
 NAVER_ENABLED = _get("NAVER_SCRAPING_ENABLED").lower() in {"1", "true", "yes", "on"}
+# 아래 두 사이트도 robots.txt는 허용하지만 이용약관이 자동 수집을 금지한다. 사용자가 직접 켠 경우에만 쓴다.
+MARKETBEAT_ENABLED = _get("MARKETBEAT_SCRAPING_ENABLED").lower() in {"1", "true", "yes", "on"}
+FOOL_ENABLED = _get("FOOL_SCRAPING_ENABLED").lower() in {"1", "true", "yes", "on"}
 
 for _d in (CACHE_DIR, SNAPSHOT_DIR, AI_DIR):
     _d.mkdir(parents=True, exist_ok=True)

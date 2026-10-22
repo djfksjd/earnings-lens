@@ -8,8 +8,10 @@ import html as htmllib
 import json
 import re
 import time
+from datetime import date
 
 from .. import config
+from . import xbrl
 from .http import ProviderError, get
 
 _HTML_TAG = re.compile(r"<[^>]+>")
@@ -92,3 +94,67 @@ def exhibit_text(url: str, max_chars: int = 120_000) -> str:
     text = html_to_text(get(url, headers=_headers(), timeout=30).text)[:max_chars]
     path.write_text(text, encoding="utf-8")
     return text
+
+
+# ---------- 10-Q/10-K XBRL: 사업부문 ----------
+
+def periodic_filings(ticker: str) -> list[dict]:
+    """10-Q·10-K 목록(정정 포함), 최신순. reportDate = 분기말."""
+    c = cik(ticker)
+    sub = _cached_json(f"sub_{c}.json", f"https://data.sec.gov/submissions/CIK{c:010d}.json", 6 * 3600)
+    r = sub["filings"]["recent"]
+    return [{"cik": c, "accession": r["accessionNumber"][i], "end": r["reportDate"][i], "form": r["form"][i]}
+            for i, form in enumerate(r["form"]) if form in ("10-Q", "10-K", "10-Q/A", "10-K/A") and r["reportDate"][i]]
+
+
+def _xbrl_files(filing: dict) -> tuple[bytes, bytes] | None:
+    """(인스턴스, 레이블). 공시는 바뀌지 않으므로 영구 캐시."""
+    acc = filing["accession"].replace("-", "")
+    folder = config.CACHE_DIR / "sec" / "xbrl" / acc
+    inst, lab = folder / "instance.xml", folder / "lab.xml"
+    if inst.exists():
+        return inst.read_bytes(), lab.read_bytes() if lab.exists() else b""
+    base = f"https://www.sec.gov/Archives/edgar/data/{filing['cik']}/{acc}"
+    names = [i["name"] for i in get(f"{base}/index.json", headers=_headers()).json()["directory"]["item"]]
+    inst_name = next((n for n in names if n.endswith("_htm.xml")), None) or next(
+        (n for n in names if n.endswith(".xml") and not re.search(r"_(cal|def|lab|pre)\.xml$|FilingSummary", n)), None)
+    if not inst_name:
+        return None
+    lab_name = next((n for n in names if n.endswith("_lab.xml")), None)
+    folder.mkdir(parents=True, exist_ok=True)
+    inst.write_bytes(get(f"{base}/{inst_name}", headers=_headers(), timeout=60).content)
+    if lab_name:
+        lab.write_bytes(get(f"{base}/{lab_name}", headers=_headers(), timeout=60).content)
+    return inst.read_bytes(), lab.read_bytes() if lab.exists() else b""
+
+
+def _loader(ticker: str):
+    filings = periodic_filings(ticker)
+    loaded: dict[str, tuple | None] = {}
+
+    def load(d: date):
+        f = next((f for f in filings if abs((date.fromisoformat(f["end"]) - d).days) <= 15), None)
+        if not f:
+            return None
+        if f["accession"] not in loaded:
+            files = _xbrl_files(f)
+            loaded[f["accession"]] = (xbrl.parse_instance(files[0]), xbrl.parse_labels(files[1], "en") if files[1] else {},
+                                      date.fromisoformat(f["end"])) if files else None
+        return loaded[f["accession"]]
+
+    return load
+
+
+def _end(period: str) -> date:
+    return date.fromisoformat(period + "-01").replace(day=28)  # 월 안의 어느 날이든 ±15일 안에 분기말이 있다
+
+
+def segments(ticker: str, period: str) -> tuple[list[dict], str]:
+    """분기 사업부문 매출·영업이익(전분기·전년동기 포함). period = 'YYYY-MM'(분기말 월)."""
+    return xbrl.build_segments(_loader(ticker), _end(period))
+
+
+def quarterly_totals(ticker: str, periods: list[str]) -> dict[str, dict[str, float]]:
+    """전사 분기 매출·영업이익·순이익(공시 원본). yfinance가 비운 분기를 채우는 데 쓴다."""
+    load = _loader(ticker)
+    return {p: v for p in periods if (v := xbrl.build_totals(load, _end(p)))}

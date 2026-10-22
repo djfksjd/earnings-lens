@@ -7,6 +7,7 @@ import streamlit as st
 from earnings_lens import service
 from earnings_lens.security import esc
 from earnings_lens.ui import components as c
+from earnings_lens.ui import mascot
 from views import _common as k
 
 
@@ -19,10 +20,16 @@ def render() -> None:
     when = f"발표 {r.event:%Y-%m-%d %H:%M}" if r.event is not None else "발표일 정보 없음"
     lead = {"big_beat": "컨센서스를 크게 넘었습니다", "beat": "컨센서스를 넘었습니다", "inline": "컨센서스에 부합했습니다",
             "miss": "컨센서스에 못 미쳤습니다", "big_miss": "컨센서스를 크게 밑돌았습니다"}.get(hv.code, "비교할 컨센서스가 아직 없습니다")
-    c.show(f'<div class="el-card headline tint-peri" style="--i:0">{c.orb(tone.get("score"), tone.get("label"), "lg")}'
-           f'<div><h2>{esc(k.plabel(r))} 실적, {esc(lead)}</h2>'
-           f'<p>{esc(r.profile.name)} · 분기말 {esc(r.period)} · {esc(when)} · 판정 기준 {esc(basis)}</p></div>'
-           f'<div style="margin-left:auto">{c.verdict_chip(hv)}</div></div>')
+    mood, line = mascot.VERDICT.get(hv.code, mascot.VERDICT["na"])
+    with st.container(key="hero"):
+        left, mid, right = st.columns([0.13, 0.72, 0.15], vertical_alignment="center", gap="small")
+        with left:
+            mascot.render(mood, height=124, framing=0.86, hue=c.tone_hue(tone.get("score"), tone.get("label")), label=line)
+        with mid:
+            st.html(f'<div class="headline-text"><h2>{esc(k.plabel(r))} 실적, {esc(lead)}</h2>'
+                    f'<p>{esc(r.profile.name)} · 분기말 {esc(r.period)} · {esc(when)} · 판정 기준 {esc(basis)}</p></div>')
+        with right:
+            st.html(f'<div style="display:flex;justify-content:flex-end">{c.verdict_chip(hv)}</div>')
     k.stat_cards(r, offset=1)
 
     left, mid, right = st.columns([2, 1, 1])
@@ -71,15 +78,21 @@ def reaction_card(r: service.Report) -> None:
 
 def tone_card(r: service.Report) -> None:
     tone = r.inputs.get("tone") or {}
-    if not tone:
-        body = c.empty("컨콜 톤 분석이 아직 없어요. <b>컨콜</b> 화면에서 트랜스크립트를 넣고 AI 분석을 실행하세요.", with_orb=True)
-        c.show(c.card("컨콜 톤", body, i=6, tint="lilac"))
-        return
-    changes = "".join(f"<li>{esc(x)}</li>" for x in (tone.get("changes") or [])[:3])
-    body = (f'<div style="display:flex;gap:14px;align-items:center">{c.orb(tone.get("score"), tone.get("label"))}'
-            f'<div><b style="font-size:1.25rem">{esc(tone.get("label", ""))}</b><br>'
-            f'<span class="card-sub">전분기 대비 {esc(tone.get("vs_last", "비교불가"))}</span></div></div>'
-            f'{c.tone_meter(tone.get("score"))}'
-            f'<p style="font-size:.88rem;color:var(--ink-2);line-height:1.55;margin:.6rem 0 .2rem">{esc(tone.get("summary", ""))}</p>'
-            f'<ul style="font-size:.84rem;color:var(--ink-2);padding-left:1.1rem;margin:0">{changes}</ul>')
-    c.show(c.card("컨콜 톤", body, i=6, tint="lilac", source=k.section_source(r, "tone")))
+    with st.container(key="card_tone"):
+        c.show(c.card_head("컨콜 톤", source=k.section_source(r, "tone") if tone else ""))
+        pic, text = st.columns([0.24, 0.76], vertical_alignment="center", gap="small")
+        with pic:
+            mascot.render(mascot.tone_mood(tone), height=96, hue=c.tone_hue(tone.get("score"), tone.get("label")) if tone else None,
+                          bubble=bool(tone))
+        with text:
+            if not tone:
+                st.html('<p class="card-sub" style="margin:0;line-height:1.55">컨콜 톤 분석이 아직 없어요. <b>컨콜</b> 화면에서 '
+                        '트랜스크립트를 넣고 AI 분석을 실행하세요.</p>')
+            else:
+                st.html(f'<b style="font-size:1.25rem">{esc(tone.get("label", ""))}</b><br>'
+                        f'<span class="card-sub">전분기 대비 {esc(tone.get("vs_last", "비교불가"))}</span>')
+        if tone:
+            changes = "".join(f"<li>{esc(x)}</li>" for x in (tone.get("changes") or [])[:3])
+            st.html(f'{c.tone_meter(tone.get("score"))}'
+                    f'<p style="font-size:.88rem;color:var(--ink-2);line-height:1.55;margin:.6rem 0 .2rem">{esc(tone.get("summary", ""))}</p>'
+                    f'<ul style="font-size:.84rem;color:var(--ink-2);padding-left:1.1rem;margin:0">{changes}</ul>')

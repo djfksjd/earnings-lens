@@ -6,7 +6,7 @@ import streamlit as st
 from .. import ai, config, manual, service
 from ..security import clean_period, clean_ticker, esc
 from . import components as c
-from . import fmt
+from . import fmt, mascot
 
 LOGO = '<div class="rail-logo" title="Earnings Lens" aria-label="Earnings Lens"><span></span></div>'
 
@@ -118,8 +118,11 @@ def copilot(rep: service.Report | None) -> None:
     ok, why = ai.available()
     with st.container(key="copilot"):
         with st.popover("Ask Lens", icon=":material/auto_awesome:"):
-            st.html(f'<div class="empty">{c.orb(size="sm")}<div><b>Lens</b><br>'
-                    f'<span class="card-sub">지금 보고 있는 종목·분기 데이터로만 답해요</span></div></div>')
+            pic, text = st.columns([0.3, 0.7], vertical_alignment="center", gap="small")
+            with pic:
+                mascot.render("hello" if ok else "sleepy", height=84, bubble=False)
+            with text:
+                st.html('<div><b>Lens</b><br><span class="card-sub">지금 보고 있는 종목·분기 데이터로만 답해요</span></div>')
             if not ok:
                 st.info(why)
                 return
